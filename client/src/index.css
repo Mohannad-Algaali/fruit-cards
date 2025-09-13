@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default;
+}
+
+@theme inline {
+  --color-primary: hsl(230, 100%, 59%);
+  --color-secondary: hsl(170, 90%, 40%);
+}
