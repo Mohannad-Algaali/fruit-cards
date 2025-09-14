@@ -47,7 +47,7 @@ export default function Menu({ next }: { next: () => void }) {
                   </div>
                   <div className="flex-1">
                     <span className="font-semibold text-gray-800">{p.nickname}</span>
-                    {index === 0 && (
+                    {p.id === roomData.hostID && (
                       <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
                         👑 Leader
                       </span>

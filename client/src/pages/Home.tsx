@@ -13,9 +13,25 @@ export default function Home() {
   useEffect(() => {
     socket.on("room-created", (data: RoomData) => {
       console.log("room created", data);
-
       navigate(`/lobby/${data.roomId}`, { state: { data: data } });
     });
+
+    socket.on("joined-room", (data: RoomData) => {
+      console.log("joined room", data);
+      navigate(`/lobby/${data.roomId}`, { state: { data: data } });
+    });
+
+    socket.on("room-not-found", (roomCode: string) => {
+      console.log("room not found:", roomCode);
+      setRoomError("Room not found. Please check the room code.");
+    });
+
+    // Cleanup listeners on unmount
+    return () => {
+      socket.off("room-created");
+      socket.off("joined-room");
+      socket.off("room-not-found");
+    };
   }, []);
 
   const handleJoinRoom = () => {
@@ -24,6 +40,14 @@ export default function Home() {
       return;
     }
 
+    if (!nickname) {
+      setRoomError("Nickname is required");
+      return;
+    }
+
+    // Clear any previous errors
+    setRoomError("");
+    
     socket.emit("join-room", nickname, roomCode);
   };
   const handleCreateRoom = () => {
@@ -79,7 +103,7 @@ export default function Home() {
               maxLength={4}
               value={roomCode}
               onChange={(e) => {
-                setRoomCode(e.target.value.toUpperCase());
+                setRoomCode(e.target.value);
               }}
             />
             {roomError && (
