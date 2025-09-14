@@ -57,6 +57,14 @@ io.on("connection", (socket) => {
     rooms.push(roomData);
     console.log(rooms);
   });
+
+  socket.on("join-room", (nickname, roomCode) => {
+    if (rooms.find((room) => room.id === roomCode)) {
+      socket.join(roomCode);
+
+      io.emit("roomJoined", roomData);
+    }
+  });
 });
 
 server.listen(3000, () => {

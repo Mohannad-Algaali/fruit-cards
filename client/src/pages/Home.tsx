@@ -23,6 +23,8 @@ export default function Home() {
       setRoomError("Room code is required");
       return;
     }
+
+    socket.emit("join-room", nickname, roomCode);
   };
   const handleCreateRoom = () => {
     socket.emit("create-room", nickname || "Player123");
