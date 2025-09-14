@@ -6,6 +6,13 @@ import socket from "../../services/Socket";
 export default function Menu({ next }: { next: () => void }) {
   const roomData = useContext<RoomData>(RoomContext);
 
+  const isHost = socket.id === roomData.hostID;
+
+  const handleStartGame = () => {
+    if (isHost) {
+      socket.emit("start-game", roomData.timer, roomData.cards, roomData.roomId);
+    }
+  };
 
   return (
     <div className="w-[100dvw] h-[100dvh] bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex flex-col justify-center items-center p-4">
@@ -23,7 +30,9 @@ export default function Menu({ next }: { next: () => void }) {
           <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             🎮 Game Settings
           </h1>
-          <p className="text-gray-600 text-lg">Configure your game and wait for players!</p>
+          <p className="text-gray-600 text-lg">
+            Configure your game and wait for players!
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -33,12 +42,14 @@ export default function Menu({ next }: { next: () => void }) {
               <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm">👥</span>
               </div>
-              <h2 className="text-2xl font-bold text-gray-800">Players in Room</h2>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Players in Room
+              </h2>
             </div>
-            
+
             <div className="space-y-3">
               {roomData.players.map((p, index) => (
-                <div 
+                <div
                   key={index}
                   className="flex items-center space-x-4 p-3 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl hover:shadow-md transition-all duration-200"
                 >
@@ -46,7 +57,9 @@ export default function Menu({ next }: { next: () => void }) {
                     {index + 1}
                   </div>
                   <div className="flex-1">
-                    <span className="font-semibold text-gray-800">{p.nickname}</span>
+                    <span className="font-semibold text-gray-800">
+                      {p.nickname}
+                    </span>
                     {p.id === roomData.hostID && (
                       <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
                         👑 Leader
@@ -55,7 +68,7 @@ export default function Menu({ next }: { next: () => void }) {
                   </div>
                 </div>
               ))}
-              
+
               {roomData.players.length < 2 && (
                 <div className="text-center py-8 text-gray-500">
                   <div className="text-4xl mb-2">⏳</div>
@@ -105,7 +118,9 @@ export default function Menu({ next }: { next: () => void }) {
                 </div>
                 <div className="text-center">
                   <span className="inline-block px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 rounded-full font-semibold text-orange-800">
-                    {roomData.timer > 10 ? "⏰ Unlimited Time" : `⏰ ${roomData.timer} seconds per turn`}
+                    {roomData.timer > 10
+                      ? "⏰ Unlimited Time"
+                      : `⏰ ${roomData.timer} seconds per turn`}
                   </span>
                 </div>
               </div>
@@ -150,14 +165,17 @@ export default function Menu({ next }: { next: () => void }) {
 
         {/* Start Game Button */}
         <div className="text-center">
-          <button 
-            onClick={next} 
-            className="px-12 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-xl rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200"
+          <button
+            onClick={handleStartGame}
+            disabled={!isHost}
+            className="px-12 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-xl rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            🚀 Start Game
+            {isHost ? "🚀 Start Game" : "Waiting for Host..."}
           </button>
           <p className="text-gray-500 text-sm mt-2">
-            Ready to play! (Testing mode - no minimum players required)
+            {isHost
+              ? "Ready to play! (Testing mode - no minimum players required)"
+              : "Only the host can start the game."}
           </p>
         </div>
       </div>
