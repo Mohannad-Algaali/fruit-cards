@@ -1,9 +1,15 @@
+export interface Player {
+  id: string;
+  nickname: string;
+  cards: string[];
+}
+
 export interface RoomData {
   roomId: string;
-  hostId: string;
-  players: [{ nickname: string; id: string; cards: [] }];
+  hostID: string;
+  players: Player[];
   timer: number;
   cards: number;
-  deck: [];
+  deck: string[];
   status: "menu" | "game" | "complete";
 }
