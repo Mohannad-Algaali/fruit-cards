@@ -12,6 +12,7 @@ export default function Lobby() {
   const { data } = location.state;
 
   const [roomData, setRoomData] = useState<RoomData>(data);
+  const [gamePhase, setGamePhase] = useState("menu");
 
   useEffect(() => {
     console.log("unstateful: " + data + "room data: " + roomData);
@@ -20,22 +21,20 @@ export default function Lobby() {
   const { roomId } = useParams();
 
   const startGame = () => {
-    // setGamePhase("game");
+    setGamePhase("game");
   };
   const endGame = () => {
-    // setGamePhase("complete");
+    setGamePhase("complete");
   };
   const newGame = () => {
-    // setGamePhase("menu");
+    setGamePhase("menu");
   };
 
   return (
     <RoomContext.Provider value={roomData}>
-      {roomData?.status === "menu" && <Menu next={startGame}></Menu>}
-      {roomData?.status === "game" && (
-        <Game next={endGame} roomId={roomId}></Game>
-      )}
-      {roomData?.status === "complete" && <Complete next={newGame}></Complete>}
+      {gamePhase === "menu" && <Menu next={startGame}></Menu>}
+      {gamePhase === "game" && <Game next={endGame} roomId={roomId}></Game>}
+      {gamePhase === "complete" && <Complete next={newGame}></Complete>}
     </RoomContext.Provider>
   );
 }

@@ -6,6 +6,8 @@ import socket from "../../services/Socket";
 export default function Menu({ next }: any) {
   const roomData = useContext<RoomData>(RoomContext);
 
+  const [timer, setTimer] = useState();
+
   return (
     <div className="w-[100dvw] h-[100dvh] flex flex-col justify-center items-center space-y-5">
       <h1 className="text-4xl">Menu</h1>
