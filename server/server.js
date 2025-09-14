@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
+const { log } = require("console");
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -14,6 +15,48 @@ const io = new Server(server, {
 
 const rooms = [];
 
+const cardTypes = [
+  "apple",
+  "mango",
+  "strawberry",
+  "banana",
+  "orange",
+  "grape",
+  "pineapple",
+  "watermelon",
+  "peach",
+  "cherry",
+];
+
+const createDeck = (cardTypes, numPlayers, numCards) => {
+  let deck = [];
+  for (let i = 0; i < numPlayers; i++) {
+    for (let j = 0; j < numCards; j++) {
+      deck.push(cardTypes[i]);
+    }
+  }
+  deck.push(cardTypes[cardTypes.length - 1]);
+  return deck;
+};
+
+function shuffle(arr) {
+  var shuffled = [];
+  var rand;
+  while (arr.length !== 0) {
+    rand = Math.floor(Math.random() * arr.length);
+    shuffled.push(arr.splice(rand, 1)[0]);
+  }
+  return shuffled;
+}
+
+function distributeCards(arr, chunkSize) {
+  const result = [];
+  for (let i = 0; i < arr.length; i += chunkSize) {
+    result.push(arr.slice(i, i + chunkSize));
+  }
+  return result;
+}
+
 const createRoomCode = (length) => {
   const characters = "1234567890abcdefghijklmnopqrstuvwxyz";
   let code = "";
@@ -21,7 +64,7 @@ const createRoomCode = (length) => {
     code += characters[Math.floor(Math.random() * characters.length)];
   }
   console.log("room code generated: ", code);
-  return code;
+  return "1234";
 };
 
 const createRoom = (roomId, hostID, hostNickname) => {
@@ -70,12 +113,51 @@ io.on("connection", (socket) => {
         `Player ${nickname} joined room ${roomCode}. Players:`,
         room.players.map((p) => p.nickname)
       );
-      io.to(socket.id).emit("joined-room", room);
-      io.to(roomCode).emit("room-updated", room);
+      io.to(socket.id).emit("joined-room", room); //Home
+      io.to(roomCode).emit("room-updated", room); // Lobby
       console.log(room);
     } else {
       console.log(`Room ${roomCode} not found.`);
       socket.emit("room-not-found", roomCode);
+    }
+  });
+
+  socket.on("start-game", (timerDuration, cardsNumber, roomId) => {
+    const numCards = parseInt(cardsNumber, 10);
+    const duration = parseInt(timerDuration, 10);
+
+    console.log(
+      `Starting game in room ${roomId} with timer ${duration} and ${numCards} cards.`
+    );
+    const room = rooms.find((r) => r.roomId === roomId);
+
+    if (room) {
+      const numPlayers = room.players.length;
+      const deck = createDeck(cardTypes, numPlayers, numCards);
+      const shuffledDeck = shuffle(deck);
+
+      // Distribute cards to players, giving the first player an extra card
+      room.players[0].cards = shuffledDeck.splice(0, numCards + 1);
+      for (let i = 1; i < numPlayers; i++) {
+        room.players[i].cards = shuffledDeck.splice(0, numCards);
+      }
+      for (let i = 0; i < numPlayers; i++) {
+        console.log(
+          `${room.players[i].nickname} has cards : ${room.players[i].cards}`
+        );
+      }
+
+      room.deck = shuffledDeck; // The rest of the cards form the deck
+      room.status = "game";
+      room.timer = duration;
+      room.cards = numCards;
+
+      io.to(roomId).emit("game-started", room);
+      io.to(roomId).emit("room-updated", room);
+      console.log(`Game started in room ${roomId}. Updated room:`, room);
+    } else {
+      console.log(`Room ${roomId} not found when trying to start game.`);
+      socket.emit("start-game-error", `Room ${roomId} not found.`);
     }
   });
 });
