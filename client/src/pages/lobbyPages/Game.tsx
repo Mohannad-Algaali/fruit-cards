@@ -1,47 +1,60 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Card from "../../components/Card";
+import socket from "../../services/Socket";
+import { RoomContext } from "../Lobby";
 
 type Player = { name: string; numCards: number };
 
+// Simplified types based on server code
+type PlayerData = {
+  id: string;
+  nickname: string;
+  cards: string[];
+};
+type RoomData = {
+  roomId: string;
+  hostID: string;
+  players: PlayerData[];
+  timer: number;
+  cards: number; // cards per player
+  status: string;
+};
+
 export default function Game({ roomId, next }: { roomId: string; next: () => void }) {
-  const cardsNumber = 3;
-  
-  // Available fruits for the game
-  const availableFruits = [
-    "apple", "banana", "orange", "strawberry", "grape", 
-    "mango", "pineapple", "watermelon", "peach", "cherry"
-  ];
-  
-  // Generate random fruits for this game session
+  const roomData = useContext<RoomData>(RoomContext);
+
   const [gameFruits, setGameFruits] = useState<string[]>([]);
   const [cards, setCards] = useState<string[]>([]);
   const [selectedCard, setSelectedCard] = useState({ index: -1, name: "" });
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [turn, setTurn] = useState(-1);
 
   useEffect(() => {
-    // Select 4 random fruits for this game
-    const shuffled = [...availableFruits].sort(() => 0.5 - Math.random());
-    const selectedFruits = shuffled.slice(0, 4);
-    setGameFruits(selectedFruits);
-    
-    // Generate player's hand with random fruits from the selected ones
-    const playerHand = [];
-    for (let i = 0; i < 4; i++) {
-      const randomFruit = selectedFruits[Math.floor(Math.random() * selectedFruits.length)];
-      playerHand.push(randomFruit);
-    }
-    setCards(playerHand);
-    
-    console.log("🎮 Game started with fruits:", selectedFruits);
-    console.log("🃏 Player's hand:", playerHand);
-  }, []);
+    if (roomData && roomData.status === "game") {
+      console.log("Populating game state from context:", roomData);
 
-  const players = [
-    { name: "1123123", numCards: cardsNumber },
-    { name: "woooow", numCards: cardsNumber + 1 },
-    { name: "yummy", numCards: cardsNumber },
-    { name: "yummy", numCards: cardsNumber },
-    { name: "yummy", numCards: cardsNumber },
-  ];
+      const me = roomData.players.find((p) => p.id === socket.id);
+      if (me) {
+        setCards(me.cards);
+      }
+
+      const allPlayersForCircle = roomData.players.map((p) => ({
+        name: p.nickname,
+        numCards: p.cards.length,
+      }));
+      setPlayers(allPlayersForCircle);
+
+      const startingPlayerIndex = roomData.players.findIndex(
+        (p) => p.cards.length > roomData.cards
+      );
+      setTurn(startingPlayerIndex !== -1 ? startingPlayerIndex : 0);
+
+      const fruitsInPlay = [
+        ...new Set(roomData.players.flatMap((p) => p.cards)),
+      ];
+      setGameFruits(fruitsInPlay);
+    }
+  }, [roomData]);
 
   const OpponentCircle = ({
     players,
@@ -65,7 +78,7 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
 
           return (
             <div
-              key={p.name}
+              key={p.name + i} // Using index in key to handle duplicate names
               className="absolute -translate-x-1/2 -translate-y-1/2"
               style={{ left: x, top: y }}
             >
@@ -79,9 +92,10 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
                 md:w-32 md:h-24
                 shadow-xl
                 transform transition-all duration-300
-                ${i === turn 
-                  ? "bg-gradient-to-br from-yellow-400 to-yellow-600 scale-110 shadow-2xl ring-4 ring-yellow-300 ring-opacity-50 animate-pulse" 
-                  : "bg-gradient-to-br from-indigo-500 to-indigo-700 hover:scale-105"
+                ${
+                  i === turn
+                    ? "bg-gradient-to-br from-yellow-400 to-yellow-600 scale-110 shadow-2xl ring-4 ring-yellow-300 ring-opacity-50 animate-pulse"
+                    : "bg-gradient-to-br from-indigo-500 to-indigo-700 hover:scale-105"
                 }
               `}
               >
@@ -90,7 +104,9 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
                 </span>
                 <div className="flex items-center space-x-1 mt-1">
                   <span className="text-xs sm:text-sm">🃏</span>
-                  <span className="text-xs sm:text-sm font-semibold">{p.numCards}</span>
+                  <span className="text-xs sm:text-sm font-semibold">
+                    {p.numCards}
+                  </span>
                 </div>
                 {i === turn && (
                   <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-300 rounded-full flex items-center justify-center animate-bounce">
@@ -115,7 +131,7 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
           </div>
           <h1 className="text-xl font-bold">Room: #{roomId}</h1>
         </div>
-        
+
         {/* Game Fruits Indicator */}
         <div className="flex items-center space-x-2">
           <span className="text-sm">🍎</span>
@@ -137,7 +153,7 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
             ))}
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-2">
           <span className="text-sm">⏱️</span>
           <span className="text-lg font-semibold">30s</span>
@@ -155,23 +171,27 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
             <div className="absolute bottom-16 left-16 w-24 h-24 bg-emerald-200 rounded-full opacity-25 animate-pulse"></div>
             <div className="absolute bottom-10 right-10 w-12 h-12 bg-pink-200 rounded-full opacity-30 animate-bounce"></div>
           </div>
-          
-          <OpponentCircle
-            players={players}
-            turn={1 /* whatever logic you use */}
-          />
+
+          <OpponentCircle players={players} turn={turn} />
         </div>
 
         {/* Player's Cards Area */}
         <div className="bg-white/90 backdrop-blur-sm shadow-2xl rounded-t-3xl p-6">
           <div className="text-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">Your Cards</h2>
-            <p className="text-sm text-gray-500">Select a card to pass to the next player</p>
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">
+              Your Cards
+            </h2>
+            <p className="text-sm text-gray-500">
+              Select a card to pass to the next player
+            </p>
           </div>
-          
+
           <div className="flex justify-center items-center space-x-4 mb-6">
             {cards.map((card, index) => (
-              <div key={index} className="transform transition-all duration-200 hover:scale-105">
+              <div
+                key={index}
+                className="transform transition-all duration-200 hover:scale-105"
+              >
                 <Card
                   cardName={card}
                   selected={
@@ -205,8 +225,8 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
 
       {/* Debug Button (remove in production) */}
       <div className="absolute bottom-4 right-4">
-        <button 
-          onClick={next} 
+        <button
+          onClick={next}
           className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded-lg transition-all duration-200"
         >
           Finish Game (Debug)
