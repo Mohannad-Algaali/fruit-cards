@@ -166,6 +166,8 @@ io.on("connection", (socket) => {
     }
   });
 
+  // pass the card to the next player then remove it from your hand
+
   socket.on("pass-card", (cardId, roomId) => {
     if (!roomId) {
       console.log(`Could not find a room for socket ${socket.id}`);
@@ -240,6 +242,8 @@ io.on("connection", (socket) => {
     }
   });
 
+  // updating the options in the menu for all players to see
+
   socket.on("update-settings", (updatedRoomData) => {
     const room = rooms.find((r) => r.roomId === updatedRoomData.roomId);
 
@@ -271,6 +275,27 @@ io.on("connection", (socket) => {
       );
       socket.emit("update-settings-error", `Room not found.`);
     }
+  });
+
+  // when the game finishes and the leader clicks go to lobby, all the players must be directed
+
+  socket.on("go-to-menu", (roomData) => {
+    if (!roomData) {
+      console.log(`Could not find a room for socket ${socket.id}`);
+      return;
+    }
+
+    const room = rooms.find((r) => r.roomId === roomData.roomId);
+    if (!room) {
+      console.log(`Room ${roomData.roomId} not found.`);
+      return;
+    }
+    room.status = "menu";
+    room.players.forEach((p) => (p.cards = []));
+    room.turn = room.hostID;
+    room.numTurns = 0;
+    room.deck = [];
+    io.to(room.roomId).emit("room-updated", room);
   });
 });
 

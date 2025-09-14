@@ -139,7 +139,7 @@ export default function Menu({ next }: { next: () => void }) {
                     value={localTimer} // Use local state
                     onChange={handleTimerChange} // Update local state
                     disabled={!isHost}
-                    className="w-full h-3 bg-gradient-to-r from-orange-200 to-red-200 rounded-lg appearance-none cursor-pointer slider disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full h-3 bg-gradient-to-r from-orange-200 to-red-200 rounded-lg appearance-none cursor-pointer slider disabled:opacity-100 disabled:cursor-not-allowed"
                   />
                   <div className="flex justify-between text-sm text-gray-500 mt-2">
                     <span>2s</span>
