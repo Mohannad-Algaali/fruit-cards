@@ -59,10 +59,23 @@ io.on("connection", (socket) => {
   });
 
   socket.on("join-room", (nickname, roomCode) => {
-    if (rooms.find((room) => room.id === roomCode)) {
+    console.log(
+      `Player ${nickname} with id ${socket.id} trying to join room ${roomCode}`
+    );
+    const room = rooms.find((r) => r.roomId === roomCode);
+    if (room) {
       socket.join(roomCode);
-
-      io.emit("roomJoined", roomData);
+      room.players.push({ id: socket.id, nickname: nickname, cards: [] });
+      console.log(
+        `Player ${nickname} joined room ${roomCode}. Players:`,
+        room.players.map((p) => p.nickname)
+      );
+      io.to(socket.id).emit("joined-room", room);
+      io.to(roomCode).emit("room-updated", room);
+      console.log(room);
+    } else {
+      console.log(`Room ${roomCode} not found.`);
+      socket.emit("room-not-found", roomCode);
     }
   });
 });
