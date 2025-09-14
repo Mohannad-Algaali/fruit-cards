@@ -3,6 +3,7 @@ const cors = require("cors");
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { log } = require("console");
+const { randomUUID } = require("crypto");
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
@@ -32,10 +33,10 @@ const createDeck = (cardTypes, numPlayers, numCards) => {
   let deck = [];
   for (let i = 0; i < numPlayers; i++) {
     for (let j = 0; j < numCards; j++) {
-      deck.push(cardTypes[i]);
+      deck.push({ type: cardTypes[i], id: randomUUID() });
     }
   }
-  deck.push(cardTypes[cardTypes.length - 1]);
+  deck.push({ type: cardTypes[cardTypes.length - 1], id: randomUUID() });
   return deck;
 };
 
@@ -49,13 +50,13 @@ function shuffle(arr) {
   return shuffled;
 }
 
-function distributeCards(arr, chunkSize) {
-  const result = [];
-  for (let i = 0; i < arr.length; i += chunkSize) {
-    result.push(arr.slice(i, i + chunkSize));
-  }
-  return result;
-}
+// function distributeCards(arr, chunkSize) {
+//   const result = [];
+//   for (let i = 0; i < arr.length; i += chunkSize) {
+//     result.push(arr.slice(i, i + chunkSize));
+//   }
+//   return result;
+// }
 
 const createRoomCode = (length) => {
   const characters = "1234567890abcdefghijklmnopqrstuvwxyz";
@@ -64,7 +65,7 @@ const createRoomCode = (length) => {
     code += characters[Math.floor(Math.random() * characters.length)];
   }
   console.log("room code generated: ", code);
-  return "1234";
+  return code;
 };
 
 const createRoom = (roomId, hostID, hostNickname) => {
@@ -84,6 +85,7 @@ const createRoom = (roomId, hostID, hostNickname) => {
     cards: 4,
     deck: [],
     status: "menu",
+    turn: hostID,
   };
   return roomData;
 };
@@ -143,7 +145,9 @@ io.on("connection", (socket) => {
       }
       for (let i = 0; i < numPlayers; i++) {
         console.log(
-          `${room.players[i].nickname} has cards : ${room.players[i].cards}`
+          `${room.players[i].nickname} has cards : ${JSON.stringify(
+            room.players[i].cards
+          )}`
         );
       }
 
@@ -152,13 +156,62 @@ io.on("connection", (socket) => {
       room.timer = duration;
       room.cards = numCards;
 
-      io.to(roomId).emit("game-started", room);
-      io.to(roomId).emit("room-updated", room);
+      io.to(roomId).emit("game-started", room); //menu
+      io.to(roomId).emit("room-updated", room); // game
       console.log(`Game started in room ${roomId}. Updated room:`, room);
     } else {
       console.log(`Room ${roomId} not found when trying to start game.`);
       socket.emit("start-game-error", `Room ${roomId} not found.`);
     }
+  });
+
+  socket.on("pass-card", (cardId, roomId) => {
+    if (!roomId) {
+      console.log(`Could not find a room for socket ${socket.id}`);
+      return;
+    }
+
+    const room = rooms.find((r) => r.roomId === roomId);
+    if (!room) {
+      console.log(`Room ${roomId} not found.`);
+      return;
+    }
+
+    if (room.turn !== socket.id) {
+      console.log(
+        `It's not player ${socket.id}'s turn in room ${room.roomId}.`
+      );
+      // Maybe emit an error to the client.
+      socket.emit("not-your-turn");
+      return;
+    }
+
+    const currentPlayerIndex = room.players.findIndex(
+      (p) => p.id === socket.id
+    );
+    const currentPlayer = room.players[currentPlayerIndex];
+
+    const cardIndex = currentPlayer.cards.findIndex((c) => c.id === cardId);
+    if (cardIndex === -1) {
+      console.log(`Card ${cardId} not found in player ${socket.id}'s hand.`);
+      return;
+    }
+
+    const [passedCard] = currentPlayer.cards.splice(cardIndex, 1);
+
+    const nextPlayerIndex = (currentPlayerIndex + 1) % room.players.length;
+    const nextPlayer = room.players[nextPlayerIndex];
+
+    nextPlayer.cards.push(passedCard);
+
+    room.turn = nextPlayer.id;
+
+    console.log(
+      `Player ${currentPlayer.nickname} passed a card to ${nextPlayer.nickname}`
+    );
+    console.log(`It is now ${nextPlayer.nickname}'s turn.`);
+
+    io.to(room.roomId).emit("room-updated", room);
   });
 });
 
