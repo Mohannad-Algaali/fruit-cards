@@ -1,5 +1,12 @@
+// Define WinnerInfo type based on server payload (copied from Lobby.tsx)
+type WinnerInfo = {
+  winnerId: string;
+  winnerNickname: string;
+  winningCardType: string;
+  numTurns: number;
+};
 
-export default function Complete({ next }: { next: () => void }) {
+export default function Complete({ next, winnerInfo }: { next: () => void; winnerInfo: WinnerInfo | null }) {
   return (
     <div className="h-[100dvh] w-[100dvw] bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 flex justify-center items-center p-4">
       {/* Background decorative elements */}
@@ -27,7 +34,7 @@ export default function Complete({ next }: { next: () => void }) {
             </div>
             <h2 className="text-3xl font-bold text-gray-800">
               <span className="bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-                Player
+                {winnerInfo?.winnerNickname || "Player"}
               </span>
             </h2>
           </div>
@@ -43,11 +50,21 @@ export default function Complete({ next }: { next: () => void }) {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="text-2xl font-bold text-orange-600">40</div>
+                <div className="text-2xl font-bold text-orange-600">{winnerInfo?.numTurns || 0}</div>
                 <div className="text-sm text-gray-600">Total Turns</div>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="text-2xl font-bold text-emerald-600">🍎</div>
+                <div className="text-2xl font-bold text-emerald-600">{winnerInfo?.winningCardType === "apple" && "🍎"}
+                {winnerInfo?.winningCardType === "banana" && "🍌"}
+                {winnerInfo?.winningCardType === "orange" && "🍊"}
+                {winnerInfo?.winningCardType === "strawberry" && "🍓"}
+                {winnerInfo?.winningCardType === "grape" && "🍇"}
+                {winnerInfo?.winningCardType === "mango" && "🥭"}
+                {winnerInfo?.winningCardType === "pineapple" && "🍍"}
+                {winnerInfo?.winningCardType === "watermelon" && "🍉"}
+                {winnerInfo?.winningCardType === "peach" && "🍑"}
+                {winnerInfo?.winningCardType === "cherry" && "🍒"}
+                {!winnerInfo?.winningCardType && "❓"}</div>
                 <div className="text-sm text-gray-600">Winning Fruit</div>
               </div>
             </div>
