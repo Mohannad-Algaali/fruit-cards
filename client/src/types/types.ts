@@ -12,4 +12,6 @@ export interface RoomData {
   cards: number;
   deck: string[];
   status: "menu" | "game" | "complete";
+  turn: string;
+  numTurns: number;
 }

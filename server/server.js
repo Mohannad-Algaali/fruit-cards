@@ -86,6 +86,7 @@ const createRoom = (roomId, hostID, hostNickname) => {
     deck: [],
     status: "menu",
     turn: hostID,
+    numTurns: 0,
   };
   return roomData;
 };
@@ -203,15 +204,39 @@ io.on("connection", (socket) => {
     const nextPlayer = room.players[nextPlayerIndex];
 
     nextPlayer.cards.push(passedCard);
+    room.nuTurns += 1;
 
-    room.turn = nextPlayer.id;
+    // Check for winner
+    let winner = null;
+    for (const player of room.players) {
+      if (
+        player.cards.length > 0 &&
+        player.cards.every((card) => card.type === player.cards[0].type)
+      ) {
+        winner = player;
+        break;
+      }
+    }
 
-    console.log(
-      `Player ${currentPlayer.nickname} passed a card to ${nextPlayer.nickname}`
-    );
-    console.log(`It is now ${nextPlayer.nickname}'s turn.`);
+    if (winner) {
+      room.status = "complete";
+      console.log(`Player ${winner.nickname} has won the game!`);
+      io.to(room.roomId).emit("game-winner", {
+        winnerId: winner.id,
+        winnerNickname: winner.nickname,
+        numTurns: room.numTurns,
+      });
+      io.to(room.roomId).emit("room-updated", room);
+    } else {
+      room.turn = nextPlayer.id;
 
-    io.to(room.roomId).emit("room-updated", room);
+      console.log(
+        `Player ${currentPlayer.nickname} passed a card to ${nextPlayer.nickname}`
+      );
+      console.log(`It is now ${nextPlayer.nickname}'s turn.`);
+
+      io.to(room.roomId).emit("room-updated", room);
+    }
   });
 });
 
