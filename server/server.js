@@ -204,7 +204,7 @@ io.on("connection", (socket) => {
     const nextPlayer = room.players[nextPlayerIndex];
 
     nextPlayer.cards.push(passedCard);
-    room.nuTurns += 1;
+    room.numTurns += 1;
 
     // Check for winner
     let winner = null;
@@ -224,6 +224,7 @@ io.on("connection", (socket) => {
       io.to(room.roomId).emit("game-winner", {
         winnerId: winner.id,
         winnerNickname: winner.nickname,
+        winningCardType: winner.cards[0].type,
         numTurns: room.numTurns,
       });
       io.to(room.roomId).emit("room-updated", room);

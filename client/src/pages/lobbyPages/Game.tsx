@@ -3,36 +3,51 @@ import Card from "../../components/Card";
 import socket from "../../services/Socket";
 import { RoomContext } from "../Lobby";
 
+// --- Types ---
+type CardType = {
+  id: string;
+  type: string;
+};
 type Player = { name: string; numCards: number };
-
-// Simplified types based on server code
 type PlayerData = {
   id: string;
   nickname: string;
-  cards: string[];
+  cards: CardType[];
 };
 type RoomData = {
   roomId: string;
   hostID: string;
   players: PlayerData[];
   timer: number;
-  cards: number; // cards per player
+  cards: number;
   status: string;
+  turn: string; // ID of the player whose turn it is
 };
+// --- End Types ---
 
-export default function Game({ roomId, next }: { roomId: string; next: () => void }) {
+export default function Game({
+  roomId,
+  next,
+}: {
+  roomId: string;
+  next: () => void;
+}) {
   const roomData = useContext<RoomData>(RoomContext);
 
-  const [gameFruits, setGameFruits] = useState<string[]>([]);
-  const [cards, setCards] = useState<string[]>([]);
-  const [selectedCard, setSelectedCard] = useState({ index: -1, name: "" });
+  const [cards, setCards] = useState<CardType[]>([]);
+  const [selectedCard, setSelectedCard] = useState<{
+    index: number;
+    card: CardType | null;
+  }>({ index: -1, card: null });
   const [players, setPlayers] = useState<Player[]>([]);
-  const [turn, setTurn] = useState(-1);
+
+  // Derived state from context
+  const turnPlayerId = roomData.turn;
+  const turnPlayerIndex = roomData.players.findIndex((p) => p.id === turnPlayerId);
+  const isMyTurn = socket.id === turnPlayerId;
 
   useEffect(() => {
     if (roomData && roomData.status === "game") {
-      console.log("Populating game state from context:", roomData);
-
       const me = roomData.players.find((p) => p.id === socket.id);
       if (me) {
         setCards(me.cards);
@@ -43,18 +58,15 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
         numCards: p.cards.length,
       }));
       setPlayers(allPlayersForCircle);
-
-      const startingPlayerIndex = roomData.players.findIndex(
-        (p) => p.cards.length > roomData.cards
-      );
-      setTurn(startingPlayerIndex !== -1 ? startingPlayerIndex : 0);
-
-      const fruitsInPlay = [
-        ...new Set(roomData.players.flatMap((p) => p.cards)),
-      ];
-      setGameFruits(fruitsInPlay);
     }
   }, [roomData]);
+
+  const handlePassCard = () => {
+    if (isMyTurn && selectedCard.card) {
+      socket.emit("pass-card", selectedCard.card.id, roomId);
+      setSelectedCard({ index: -1, card: null });
+    }
+  };
 
   const OpponentCircle = ({
     players,
@@ -132,23 +144,22 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
           <h1 className="text-xl font-bold">Room: #{roomId}</h1>
         </div>
 
-        {/* Game Fruits Indicator */}
         <div className="flex items-center space-x-2">
           <span className="text-sm">🍎</span>
           <span className="text-sm font-semibold">Fruits in play:</span>
           <div className="flex space-x-1">
-            {gameFruits.map((fruit, index) => (
-              <span key={index} className="text-lg" title={fruit}>
-                {fruit === "apple" && "🍎"}
-                {fruit === "banana" && "🍌"}
-                {fruit === "orange" && "🍊"}
-                {fruit === "strawberry" && "🍓"}
-                {fruit === "grape" && "🍇"}
-                {fruit === "mango" && "🥭"}
-                {fruit === "pineapple" && "🍍"}
-                {fruit === "watermelon" && "🍉"}
-                {fruit === "peach" && "🍑"}
-                {fruit === "cherry" && "🍒"}
+            {roomData.players.flatMap(p => p.cards).map((card, index) => (
+              <span key={index} className="text-lg" title={card.type}>
+                {card.type === "apple" && "🍎"}
+                {card.type === "banana" && "🍌"}
+                {card.type === "orange" && "🍊"}
+                {card.type === "strawberry" && "🍓"}
+                {card.type === "grape" && "🍇"}
+                {card.type === "mango" && "🥭"}
+                {card.type === "pineapple" && "🍍"}
+                {card.type === "watermelon" && "🍉"}
+                {card.type === "peach" && "🍑"}
+                {card.type === "cherry" && "🍒"}
               </span>
             ))}
           </div>
@@ -156,7 +167,7 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
 
         <div className="flex items-center space-x-2">
           <span className="text-sm">⏱️</span>
-          <span className="text-lg font-semibold">30s</span>
+          <span className="text-lg font-semibold">{roomData.timer}s</span>
         </div>
       </div>
 
@@ -164,48 +175,44 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
       <div className="flex-1 flex flex-col">
         {/* Opponents Circle */}
         <div className="flex-1 flex justify-center items-center relative overflow-hidden">
-          {/* Background decorative elements */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-10 left-10 w-20 h-20 bg-blue-200 rounded-full opacity-20 animate-pulse"></div>
-            <div className="absolute top-20 right-16 w-16 h-16 bg-purple-200 rounded-full opacity-30 animate-bounce"></div>
-            <div className="absolute bottom-16 left-16 w-24 h-24 bg-emerald-200 rounded-full opacity-25 animate-pulse"></div>
-            <div className="absolute bottom-10 right-10 w-12 h-12 bg-pink-200 rounded-full opacity-30 animate-bounce"></div>
-          </div>
-
-          <OpponentCircle players={players} turn={turn} />
+          <OpponentCircle players={players} turn={turnPlayerIndex} />
         </div>
 
         {/* Player's Cards Area */}
-        <div className="bg-white/90 backdrop-blur-sm shadow-2xl rounded-t-3xl p-6">
+        <div
+          className={`bg-white/90 backdrop-blur-sm shadow-2xl rounded-t-3xl p-6 transition-all duration-300 ${
+            isMyTurn ? "ring-4 ring-emerald-400" : "ring-0"
+          }`}
+        >
           <div className="text-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">
-              Your Cards
+            <h2 className="2xl font-bold text-gray-800 mb-2">
+              {isMyTurn ? "Your Turn!" : "Your Cards"}
             </h2>
             <p className="text-sm text-gray-500">
-              Select a card to pass to the next player
+              {isMyTurn
+                ? "Select a card to pass to the next player"
+                : "Wait for your turn..."}
             </p>
           </div>
 
           <div className="flex justify-center items-center space-x-4 mb-6">
             {cards.map((card, index) => (
               <div
-                key={index}
-                className="transform transition-all duration-200 hover:scale-105"
+                key={card.id}
+                className={`transform transition-all duration-200 ${
+                  isMyTurn ? "hover:scale-105 cursor-pointer" : "cursor-not-allowed opacity-70"
+                }`}
               >
                 <Card
-                  cardName={card}
-                  selected={
-                    selectedCard.name === card && selectedCard.index === index
-                  }
-                  action={(val: string) => {
-                    if (
-                      val === selectedCard.name &&
-                      index === selectedCard.index
-                    ) {
-                      setSelectedCard({ name: "", index: -1 });
+                  cardName={card.type}
+                  selected={selectedCard.card?.id === card.id}
+                  action={() => {
+                    if (!isMyTurn) return;
+                    if (selectedCard.card?.id === card.id) {
+                      setSelectedCard({ index: -1, card: null });
                       return;
                     }
-                    setSelectedCard({ name: val, index: index });
+                    setSelectedCard({ index: index, card: card });
                   }}
                 />
               </div>
@@ -213,10 +220,13 @@ export default function Game({ roomId, next }: { roomId: string; next: () => voi
           </div>
 
           {/* Action Button */}
-          {selectedCard.name !== "" && selectedCard.index >= 0 && (
+          {isMyTurn && selectedCard.card && (
             <div className="text-center">
-              <button className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 animate-pulse">
-                🚀 Pass {selectedCard.name} Card
+              <button
+                onClick={handlePassCard}
+                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 animate-pulse"
+              >
+                🚀 Pass {selectedCard.card.type} Card
               </button>
             </div>
           )}
