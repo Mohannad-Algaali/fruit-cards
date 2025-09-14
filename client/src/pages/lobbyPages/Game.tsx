@@ -43,7 +43,9 @@ export default function Game({
 
   // Derived state from context
   const turnPlayerId = roomData.turn;
-  const turnPlayerIndex = roomData.players.findIndex((p) => p.id === turnPlayerId);
+  const turnPlayerIndex = roomData.players.findIndex(
+    (p) => p.id === turnPlayerId
+  );
   const isMyTurn = socket.id === turnPlayerId;
 
   useEffect(() => {
@@ -145,23 +147,41 @@ export default function Game({
         </div>
 
         <div className="flex items-center space-x-2">
-          <span className="text-sm">🍎</span>
           <span className="text-sm font-semibold">Fruits in play:</span>
-          <div className="flex space-x-1">
-            {roomData.players.flatMap(p => p.cards).map((card, index) => (
-              <span key={index} className="text-lg" title={card.type}>
-                {card.type === "apple" && "🍎"}
-                {card.type === "banana" && "🍌"}
-                {card.type === "orange" && "🍊"}
-                {card.type === "strawberry" && "🍓"}
-                {card.type === "grape" && "🍇"}
-                {card.type === "mango" && "🥭"}
-                {card.type === "pineapple" && "🍍"}
-                {card.type === "watermelon" && "🍉"}
-                {card.type === "peach" && "🍑"}
-                {card.type === "cherry" && "🍒"}
-              </span>
-            ))}
+          <div className="flex flex-wrap items-center gap-2">
+            {Object.entries(
+              roomData.players
+                .flatMap((p) => p.cards)
+                .reduce((acc, card) => {
+                  acc[card.type] = (acc[card.type] || 0) + 1;
+                  return acc;
+                }, {} as Record<string, number>)
+            )
+              .sort(([fruitA], [fruitB]) => fruitA.localeCompare(fruitB))
+              .map(([fruit, count]) => (
+                <div
+                  key={fruit}
+                  className="flex items-center bg-white/20 rounded-full px-2 py-1 text-xs"
+                >
+                  <span className="text-base" title={fruit}>
+                    {
+                      {
+                        apple: "🍎",
+                        banana: "🍌",
+                        orange: "🍊",
+                        strawberry: "🍓",
+                        grape: "🍇",
+                        mango: "🥭",
+                        pineapple: "🍍",
+                        watermelon: "🍉",
+                        peach: "🍑",
+                        cherry: "🍒",
+                      }[fruit]
+                    }
+                  </span>
+                  <span className="font-bold ml-1.5 text-md">x{count}</span>
+                </div>
+              ))}
           </div>
         </div>
 
@@ -200,7 +220,9 @@ export default function Game({
               <div
                 key={card.id}
                 className={`transform transition-all duration-200 ${
-                  isMyTurn ? "hover:scale-105 cursor-pointer" : "cursor-not-allowed opacity-70"
+                  isMyTurn
+                    ? "hover:scale-105 cursor-pointer"
+                    : "cursor-not-allowed opacity-70"
                 }`}
               >
                 <Card

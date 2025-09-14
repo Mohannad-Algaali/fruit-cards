@@ -1,3 +1,7 @@
+import { useContext } from "react";
+import { RoomContext } from "../Lobby";
+import socket from "../../services/Socket";
+import type { RoomData } from "../../types/types";
 // Define WinnerInfo type based on server payload (copied from Lobby.tsx)
 type WinnerInfo = {
   winnerId: string;
@@ -6,7 +10,14 @@ type WinnerInfo = {
   numTurns: number;
 };
 
-export default function Complete({ next, winnerInfo }: { next: () => void; winnerInfo: WinnerInfo | null }) {
+export default function Complete({
+  next,
+  winnerInfo,
+}: {
+  next: () => void;
+  winnerInfo: WinnerInfo | null;
+}) {
+  const roomData: RoomData = useContext(RoomContext);
   return (
     <div className="h-[100dvh] w-[100dvw] bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 flex justify-center items-center p-4">
       {/* Background decorative elements */}
@@ -46,25 +57,31 @@ export default function Complete({ next, winnerInfo }: { next: () => void; winne
           <div className="text-center space-y-3">
             <div className="flex items-center justify-center space-x-2">
               <span className="text-2xl">🃏</span>
-              <span className="text-lg font-semibold text-gray-700">Game Statistics</span>
+              <span className="text-lg font-semibold text-gray-700">
+                Game Statistics
+              </span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="text-2xl font-bold text-orange-600">{winnerInfo?.numTurns || 0}</div>
+                <div className="text-2xl font-bold text-orange-600">
+                  {winnerInfo?.numTurns || 0}
+                </div>
                 <div className="text-sm text-gray-600">Total Turns</div>
               </div>
               <div className="bg-white rounded-xl p-4 shadow-sm">
-                <div className="text-2xl font-bold text-emerald-600">{winnerInfo?.winningCardType === "apple" && "🍎"}
-                {winnerInfo?.winningCardType === "banana" && "🍌"}
-                {winnerInfo?.winningCardType === "orange" && "🍊"}
-                {winnerInfo?.winningCardType === "strawberry" && "🍓"}
-                {winnerInfo?.winningCardType === "grape" && "🍇"}
-                {winnerInfo?.winningCardType === "mango" && "🥭"}
-                {winnerInfo?.winningCardType === "pineapple" && "🍍"}
-                {winnerInfo?.winningCardType === "watermelon" && "🍉"}
-                {winnerInfo?.winningCardType === "peach" && "🍑"}
-                {winnerInfo?.winningCardType === "cherry" && "🍒"}
-                {!winnerInfo?.winningCardType && "❓"}</div>
+                <div className="text-2xl font-bold text-emerald-600">
+                  {winnerInfo?.winningCardType === "apple" && "🍎"}
+                  {winnerInfo?.winningCardType === "banana" && "🍌"}
+                  {winnerInfo?.winningCardType === "orange" && "🍊"}
+                  {winnerInfo?.winningCardType === "strawberry" && "🍓"}
+                  {winnerInfo?.winningCardType === "grape" && "🍇"}
+                  {winnerInfo?.winningCardType === "mango" && "🥭"}
+                  {winnerInfo?.winningCardType === "pineapple" && "🍍"}
+                  {winnerInfo?.winningCardType === "watermelon" && "🍉"}
+                  {winnerInfo?.winningCardType === "peach" && "🍑"}
+                  {winnerInfo?.winningCardType === "cherry" && "🍒"}
+                  {!winnerInfo?.winningCardType && "❓"}
+                </div>
                 <div className="text-sm text-gray-600">Winning Fruit</div>
               </div>
             </div>
@@ -73,14 +90,15 @@ export default function Complete({ next, winnerInfo }: { next: () => void; winne
 
         {/* Action Buttons */}
         <div className="w-full space-y-4">
-          <button 
-            onClick={next} 
-            className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-xl rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+          <button
+            onClick={next}
+            disabled={socket.id !== roomData?.hostID}
+            className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-xl rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             🎮 Play Again
           </button>
-          <button 
-            onClick={() => window.location.href = '/'} 
+          <button
+            onClick={() => (window.location.href = "/")}
             className="w-full py-3 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
           >
             🏠 Back to Home

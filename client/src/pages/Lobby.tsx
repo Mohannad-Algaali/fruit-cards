@@ -94,6 +94,7 @@ export default function Lobby() {
     setGamePhase("complete");
   };
   const newGame = () => {
+    socket.emit("go-to-menu", roomData);
     setGamePhase("menu");
     setWinnerInfo(null); // Clear winner info for new game
   };
