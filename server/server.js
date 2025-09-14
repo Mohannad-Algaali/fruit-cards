@@ -239,6 +239,39 @@ io.on("connection", (socket) => {
       io.to(room.roomId).emit("room-updated", room);
     }
   });
+
+  socket.on("update-settings", (updatedRoomData) => {
+    const room = rooms.find((r) => r.roomId === updatedRoomData.roomId);
+
+    if (room) {
+      if (socket.id === room.hostID) {
+        room.timer = updatedRoomData.timer;
+        room.cards = updatedRoomData.cards;
+
+        io.to(room.roomId).emit("room-updated", room);
+        console.log(
+          `Room ${room.roomId} settings updated by host. New settings:`,
+          {
+            timer: room.timer,
+            cards: room.cards,
+          }
+        );
+      } else {
+        console.log(
+          `Attempt to update settings in room ${room.roomId} by non-host ${socket.id}.`
+        );
+        socket.emit(
+          "update-settings-error",
+          "Only the host can change settings."
+        );
+      }
+    } else {
+      console.log(
+        `Room with ID ${updatedRoomData.roomId} not found for settings update.`
+      );
+      socket.emit("update-settings-error", `Room not found.`);
+    }
+  });
 });
 
 server.listen(3000, () => {

@@ -16,6 +16,15 @@ export default function Menu({ next }: { next: () => void }) {
     setLocalCards(roomData.cards);
   }, [roomData.timer, roomData.cards]);
 
+  useEffect(() => {
+    const updatedRoomData = {
+      ...roomData,
+      timer: localTimer,
+      cards: localCards,
+    };
+    socket.emit("update-settings", updatedRoomData);
+  }, [localTimer, localCards]);
+
   const isHost = socket.id === roomData.hostID;
 
   const handleStartGame = () => {
@@ -129,7 +138,8 @@ export default function Menu({ next }: { next: () => void }) {
                     min={2}
                     value={localTimer} // Use local state
                     onChange={handleTimerChange} // Update local state
-                    className="w-full h-3 bg-gradient-to-r from-orange-200 to-red-200 rounded-lg appearance-none cursor-pointer slider"
+                    disabled={!isHost}
+                    className="w-full h-3 bg-gradient-to-r from-orange-200 to-red-200 rounded-lg appearance-none cursor-pointer slider disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <div className="flex justify-between text-sm text-gray-500 mt-2">
                     <span>2s</span>
@@ -161,7 +171,8 @@ export default function Menu({ next }: { next: () => void }) {
                     min={3}
                     value={localCards} // Use local state
                     onChange={handleCardsChange} // Update local state
-                    className="w-full h-3 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg appearance-none cursor-pointer slider"
+                    disabled={!isHost}
+                    className="w-full h-3 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg appearance-none cursor-pointer slider disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <div className="flex justify-between text-sm text-gray-500 mt-2">
                     <span>3</span>

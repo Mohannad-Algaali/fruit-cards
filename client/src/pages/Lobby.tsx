@@ -5,6 +5,7 @@ import Game from "./lobbyPages/Game";
 import Complete from "./lobbyPages/Complete";
 import type { RoomData } from "../types/types";
 import socket from "../services/Socket";
+import { useSound } from "../hooks/useSound";
 
 // Define WinnerInfo type based on server payload
 type WinnerInfo = {
@@ -23,12 +24,25 @@ export default function Lobby() {
   const [roomData, setRoomData] = useState<RoomData>(data);
   const [gamePhase, setGamePhase] = useState("menu");
   const [winnerInfo, setWinnerInfo] = useState<WinnerInfo | null>(null); // New state for winner
+  const joinSound = useSound("/sound/player_join.mp3");
+  const cardSound = useSound("/sound/card_pass.mp3");
+  const winSound = useSound("/sound/game_win.mp3");
+  const startSound = useSound("/sound/turn_start.mp3");
 
   useEffect(() => {
     console.log("Initial room data:", data);
 
     const handleRoomUpdate = (updatedRoomData: RoomData) => {
       console.log("Room updated:", updatedRoomData);
+      if (updatedRoomData.players.length !== roomData.players.length) {
+        joinSound.play();
+      } else if (
+        JSON.stringify(updatedRoomData.players) !==
+        JSON.stringify(roomData.players)
+      ) {
+        cardSound.play();
+      }
+
       setRoomData(updatedRoomData);
     };
 
@@ -36,12 +50,16 @@ export default function Lobby() {
       console.log("Game started! Switching to game view.", updatedRoomData);
       setRoomData(updatedRoomData);
       setGamePhase("game"); // Directly set gamePhase here
+      startSound.play();
     };
 
-    const handleGameWinner = (winnerData: WinnerInfo) => { // New handler for game-winner
+    const handleGameWinner = (winnerData: WinnerInfo) => {
+      // New handler for game-winner
+
       console.log("Game over! Winner:", winnerData);
       setWinnerInfo(winnerData);
       setGamePhase("complete");
+      winSound.play();
     };
 
     // Listen for room updates (when players join/leave)
@@ -83,8 +101,13 @@ export default function Lobby() {
   return (
     <RoomContext.Provider value={roomData}>
       {gamePhase === "menu" && <Menu next={startGame}></Menu>}
-      {gamePhase === "game" && <Game next={endGame} roomId={roomId || ""}></Game>}
-      {gamePhase === "complete" && <Complete next={newGame} winnerInfo={winnerInfo}></Complete>} {/* Pass winnerInfo */}
+      {gamePhase === "game" && (
+        <Game next={endGame} roomId={roomId || ""}></Game>
+      )}
+      {gamePhase === "complete" && (
+        <Complete next={newGame} winnerInfo={winnerInfo}></Complete>
+      )}{" "}
+      {/* Pass winnerInfo */}
     </RoomContext.Provider>
   );
 }
