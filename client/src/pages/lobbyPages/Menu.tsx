@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState, useEffect } from "react"; // Added useState, useEffect
 import { RoomContext } from "../Lobby";
 import type { RoomData } from "../../types/types";
 import socket from "../../services/Socket";
@@ -6,12 +6,38 @@ import socket from "../../services/Socket";
 export default function Menu({ next }: { next: () => void }) {
   const roomData = useContext<RoomData>(RoomContext);
 
+  // Local state for sliders
+  const [localTimer, setLocalTimer] = useState(roomData.timer);
+  const [localCards, setLocalCards] = useState(roomData.cards);
+
+  // Sync local state with roomData from context
+  useEffect(() => {
+    setLocalTimer(roomData.timer);
+    setLocalCards(roomData.cards);
+  }, [roomData.timer, roomData.cards]);
+
   const isHost = socket.id === roomData.hostID;
 
   const handleStartGame = () => {
     if (isHost) {
-      socket.emit("start-game", roomData.timer, roomData.cards, roomData.roomId);
+      // Emit start-game with local slider values
+      socket.emit("start-game", localTimer, localCards, roomData.roomId);
     }
+  };
+
+  const handleTimerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newTimer = Number(e.target.value);
+    setLocalTimer(newTimer);
+    // Optionally, emit update-room to server immediately if desired, but the request is to make it local.
+    // If we want other players to see the slider move, we'd still emit.
+    // For "local" working, we only update local state.
+    // The server will get the final values on "start-game".
+  };
+
+  const handleCardsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newCards = Number(e.target.value);
+    setLocalCards(newCards);
+    // Same as above, only update local state for "local" working.
   };
 
   return (
@@ -101,13 +127,8 @@ export default function Menu({ next }: { next: () => void }) {
                     type="range"
                     max={11}
                     min={2}
-                    value={roomData.timer}
-                    onChange={(e) =>
-                      socket.emit("update-room", {
-                        ...roomData,
-                        timer: Number(e.target.value),
-                      })
-                    }
+                    value={localTimer} // Use local state
+                    onChange={handleTimerChange} // Update local state
                     className="w-full h-3 bg-gradient-to-r from-orange-200 to-red-200 rounded-lg appearance-none cursor-pointer slider"
                   />
                   <div className="flex justify-between text-sm text-gray-500 mt-2">
@@ -118,9 +139,9 @@ export default function Menu({ next }: { next: () => void }) {
                 </div>
                 <div className="text-center">
                   <span className="inline-block px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 rounded-full font-semibold text-orange-800">
-                    {roomData.timer > 10
+                    {localTimer > 10
                       ? "⏰ Unlimited Time"
-                      : `⏰ ${roomData.timer} seconds per turn`}
+                      : `⏰ ${localTimer} seconds per turn`}
                   </span>
                 </div>
               </div>
@@ -138,13 +159,8 @@ export default function Menu({ next }: { next: () => void }) {
                     type="range"
                     max={5}
                     min={3}
-                    value={roomData.cards}
-                    onChange={(e) =>
-                      socket.emit("update-room", {
-                        ...roomData,
-                        cards: Number(e.target.value),
-                      })
-                    }
+                    value={localCards} // Use local state
+                    onChange={handleCardsChange} // Update local state
                     className="w-full h-3 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg appearance-none cursor-pointer slider"
                   />
                   <div className="flex justify-between text-sm text-gray-500 mt-2">
@@ -155,7 +171,7 @@ export default function Menu({ next }: { next: () => void }) {
                 </div>
                 <div className="text-center">
                   <span className="inline-block px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full font-semibold text-green-800">
-                    🃏 {roomData.cards} cards per player
+                    🃏 {localCards} cards per player
                   </span>
                 </div>
               </div>
