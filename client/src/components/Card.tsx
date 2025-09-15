@@ -1,10 +1,8 @@
 export default function Card({
   cardName,
-  action,
   selected,
 }: {
   cardName: string;
-  action: (value: string) => void;
   selected: boolean;
 }) {
   // Fruit emoji mapping
@@ -40,16 +38,14 @@ export default function Card({
 
   return (
     <div
-      onClick={() => action(cardName)}
       className={`
         w-24 h-36 sm:w-28 sm:h-40 md:w-32 md:h-44
         bg-gradient-to-br ${colorClass}
         rounded-2xl shadow-lg hover:shadow-xl
         flex flex-col justify-center items-center
-        cursor-pointer transform transition-all duration-200
-        hover:scale-105 hover:-translate-y-2
+        cursor-pointer transition-all duration-200
         ${selected 
-          ? "ring-4 ring-yellow-400 ring-opacity-75 scale-110 -translate-y-3 shadow-2xl" 
+          ? "ring-4 ring-yellow-400 ring-opacity-75 shadow-2xl" 
           : "hover:ring-2 hover:ring-white hover:ring-opacity-50"
         }
         relative overflow-hidden
