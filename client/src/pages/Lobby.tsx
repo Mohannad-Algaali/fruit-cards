@@ -27,7 +27,7 @@ export default function Lobby() {
   const joinSound = useSound("/sound/player_join.mp3");
   const cardSound = useSound("/sound/card_pass.mp3");
   const winSound = useSound("/sound/game_win.mp3");
-  const startSound = useSound("/sound/turn_start.mp3");
+  const startSound = useSound("/sound/game_start.mp3");
 
   useEffect(() => {
     if (!roomData) {

@@ -138,17 +138,17 @@ export default function Game({
   return (
     <div className="h-[100dvh] w-[100dvw] bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 flex flex-col">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg flex flex-row justify-between items-center px-6 py-4 text-white">
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg flex flex-col sm:flex-row justify-between items-center px-4 sm:px-6 py-3 sm:py-4 text-white gap-4">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
             <span className="text-sm">🎮</span>
           </div>
-          <h1 className="text-xl font-bold">Room: #{roomId}</h1>
+          <h1 className="text-lg sm:text-xl font-bold">Room: #{roomId}</h1>
         </div>
 
         <div className="flex items-center space-x-2">
-          <span className="text-sm font-semibold">Fruits in play:</span>
-          <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs sm:text-sm font-semibold">In Play:</span>
+          <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             {Object.entries(
               roomData.players
                 .flatMap((p) => p.cards)
@@ -163,7 +163,7 @@ export default function Game({
                   key={fruit}
                   className="flex items-center bg-white/20 rounded-full px-2 py-1 text-xs"
                 >
-                  <span className="text-base" title={fruit}>
+                  <span className="text-sm sm:text-base" title={fruit}>
                     {
                       {
                         apple: "🍎",
@@ -179,7 +179,7 @@ export default function Game({
                       }[fruit]
                     }
                   </span>
-                  <span className="font-bold ml-1.5 text-md">x{count}</span>
+                  <span className="font-bold ml-1 text-sm sm:text-md">x{count}</span>
                 </div>
               ))}
           </div>
@@ -187,58 +187,70 @@ export default function Game({
 
         <div className="flex items-center space-x-2">
           <span className="text-sm">⏱️</span>
-          <span className="text-lg font-semibold">{roomData.timer}s</span>
+          <span className="text-base sm:text-lg font-semibold">{roomData.timer}s</span>
         </div>
       </div>
 
       {/* Game Area */}
       <div className="flex-1 flex flex-col">
         {/* Opponents Circle */}
-        <div className="flex-1 flex justify-center items-center relative overflow-hidden">
+        <div className="flex-1 flex justify-center items-center relative overflow-hidden p-4">
           <OpponentCircle players={players} turn={turnPlayerIndex} />
         </div>
 
         {/* Player's Cards Area */}
         <div
-          className={`bg-white/90 backdrop-blur-sm shadow-2xl rounded-t-3xl p-6 transition-all duration-300 ${
+          className={`bg-white/90 backdrop-blur-sm shadow-2xl rounded-t-3xl p-4 sm:p-6 transition-all duration-300 ${
             isMyTurn ? "ring-4 ring-emerald-400" : "ring-0"
           }`}
         >
           <div className="text-center mb-4">
-            <h2 className="2xl font-bold text-gray-800 mb-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 sm:mb-2">
               {isMyTurn ? "Your Turn!" : "Your Cards"}
             </h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500">
               {isMyTurn
                 ? "Select a card to pass to the next player"
                 : "Wait for your turn..."}
             </p>
           </div>
 
-          <div className="flex justify-center items-center space-x-4 mb-6">
-            {cards.map((card, index) => (
-              <div
-                key={card.id}
-                className={`transform transition-all duration-200 ${
-                  isMyTurn
-                    ? "hover:scale-105 cursor-pointer"
-                    : "cursor-not-allowed opacity-70"
-                }`}
-              >
-                <Card
-                  cardName={card.type}
-                  selected={selectedCard.card?.id === card.id}
-                  action={() => {
-                    if (!isMyTurn) return;
-                    if (selectedCard.card?.id === card.id) {
-                      setSelectedCard({ index: -1, card: null });
-                      return;
-                    }
-                    setSelectedCard({ index: index, card: card });
+          <div className="relative flex justify-center items-end h-48 sm:h-56 md:h-64 mb-4 sm:mb-6">
+            {cards.map((card, index) => {
+              const isSelected = selectedCard.card?.id === card.id;
+              const rotation = (index - (cards.length - 1) / 2) * 8; // Calculate rotation angle
+              return (
+                <div
+                  key={card.id}
+                  className={`absolute transform transition-all duration-300 ${
+                    isMyTurn
+                      ? "cursor-pointer hover:z-10"
+                      : "cursor-not-allowed opacity-80"
+                  } ${
+                    isSelected
+                      ? "!-translate-y-8 z-10"
+                      : "hover:-translate-y-4"
+                  }`}
+                  style={{
+                    transform: `rotate(${rotation}deg)`,
+                    transformOrigin: "bottom center",
                   }}
-                />
-              </div>
-            ))}
+                  onClick={() => {
+                    if (!isMyTurn) return;
+                    if (isSelected) {
+                      setSelectedCard({ index: -1, card: null });
+                    } else {
+                      setSelectedCard({ index: index, card: card });
+                    }
+                  }}
+                >
+                  <Card
+                    cardName={card.type}
+                    selected={isSelected}
+                  />
+                </div>
+              );
+            })}
           </div>
 
           {/* Action Button */}
@@ -246,23 +258,13 @@ export default function Game({
             <div className="text-center">
               <button
                 onClick={handlePassCard}
-                className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 animate-pulse"
+                className="px-6 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-base sm:text-lg rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 animate-pulse"
               >
                 🚀 Pass {selectedCard.card.type} Card
               </button>
             </div>
           )}
         </div>
-      </div>
-
-      {/* Debug Button (remove in production) */}
-      <div className="absolute bottom-4 right-4">
-        <button
-          onClick={next}
-          className="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded-lg transition-all duration-200"
-        >
-          Finish Game (Debug)
-        </button>
       </div>
     </div>
   );

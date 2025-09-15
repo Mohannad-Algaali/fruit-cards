@@ -72,26 +72,31 @@ export default function Home() {
         <div className="absolute bottom-20 right-20 w-20 h-20 bg-green-200 rounded-full opacity-30 animate-bounce"></div>
       </div>
 
-      <div className="bg-white/90 backdrop-blur-sm shadow-2xl rounded-3xl min-h-[70dvh] w-full max-w-md flex flex-col justify-center items-center p-8 space-y-8 relative z-10">
+      <div className="bg-white/90 backdrop-blur-sm shadow-2xl rounded-3xl min-h-[70dvh] w-full max-w-sm sm:max-w-md flex flex-col justify-center items-center p-4 sm:p-8 space-y-6 sm:space-y-8 relative z-10">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-emerald-600 via-orange-500 to-pink-500 bg-clip-text text-transparent">
+          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-emerald-600 via-orange-500 to-pink-500 bg-clip-text text-transparent">
             🍎 Fruit Cards 🍌
           </h1>
-          <p className="text-gray-600 text-lg">Collect matching fruits to win!</p>
+          <p className="text-gray-600 text-base sm:text-lg">
+            Collect matching fruits to win!
+          </p>
         </div>
 
         {/* Form */}
-        <div className="w-full space-y-6">
+        <div className="w-full space-y-4 sm:space-y-6">
           {/* Nickname Input */}
           <div className="space-y-2">
-            <label htmlFor="nickname" className="block text-sm font-semibold text-gray-700">
+            <label
+              htmlFor="nickname"
+              className="block text-sm font-semibold text-gray-700"
+            >
               Your Nickname
             </label>
             <input
               id="nickname"
               type="text"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all duration-200 text-lg placeholder-gray-400"
+              className="w-full px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all duration-200 text-base sm:text-lg placeholder-gray-400"
               placeholder="Enter your nickname..."
               onChange={(e) => setNickname(e.target.value)}
               value={nickname}
@@ -100,13 +105,16 @@ export default function Home() {
 
           {/* Room Code Input */}
           <div className="space-y-2">
-            <label htmlFor="room" className="block text-sm font-semibold text-gray-700">
+            <label
+              htmlFor="room"
+              className="block text-sm font-semibold text-gray-700"
+            >
               Room Code
             </label>
             <input
               id="room"
               type="text"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-200 transition-all duration-200 text-lg placeholder-gray-400 text-center tracking-widest"
+              className="w-full px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-200 transition-all duration-200 text-base sm:text-lg placeholder-gray-400 text-center tracking-widest"
               placeholder="XXXX"
               maxLength={4}
               value={roomCode}
@@ -124,16 +132,16 @@ export default function Home() {
         </div>
 
         {/* Action Buttons */}
-        <div className="w-full space-y-4">
+        <div className="w-full space-y-3 sm:space-y-4">
           <button
-            className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-lg"
+            className="w-full py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-base sm:text-lg"
             onClick={handleJoinRoom}
             disabled={!roomCode || !nickname}
           >
             🚪 Join Room
           </button>
           <button
-            className="w-full py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-lg"
+            className="w-full py-3 sm:py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-base sm:text-lg"
             onClick={handleCreateRoom}
             disabled={!nickname}
           >
