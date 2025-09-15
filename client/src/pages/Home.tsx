@@ -26,13 +26,21 @@ export default function Home() {
       setRoomError("Room not found. Please check the room code.");
     });
 
+    socket.on("in-room", (data: RoomData) => {
+      console.log("already in room", data);
+      navigate(`/lobby/${data.roomId}`, { state: { data: data } });
+    });
+
+    socket.emit("check-room");
+
     // Cleanup listeners on unmount
     return () => {
       socket.off("room-created");
       socket.off("joined-room");
       socket.off("room-not-found");
+      socket.off("in-room");
     };
-  }, []);
+  }, [navigate]);
 
   const handleJoinRoom = () => {
     if (!roomCode) {
