@@ -1,16 +1,16 @@
-import { useContext, useState, useEffect } from "react"; // Added useState, useEffect
+import { useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { RoomContext } from "../Lobby";
 import type { RoomData } from "../../types/types";
 import socket from "../../services/Socket";
 
 export default function Menu({ next }: { next: () => void }) {
   const roomData = useContext<RoomData>(RoomContext);
+  const navigate = useNavigate();
 
-  // Local state for sliders
   const [localTimer, setLocalTimer] = useState(roomData.timer);
   const [localCards, setLocalCards] = useState(roomData.cards);
 
-  // Sync local state with roomData from context
   useEffect(() => {
     setLocalTimer(roomData.timer);
     setLocalCards(roomData.cards);
@@ -25,33 +25,47 @@ export default function Menu({ next }: { next: () => void }) {
     socket.emit("update-settings", updatedRoomData);
   }, [localTimer, localCards]);
 
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      socket.emit("leave-room");
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
   const isHost = socket.id === roomData.hostID;
 
   const handleStartGame = () => {
     if (isHost) {
-      // Emit start-game with local slider values
       socket.emit("start-game", localTimer, localCards, roomData.roomId);
+    }
+  };
+
+  const handleLeaveRoom = () => {
+    socket.emit("leave-room");
+    navigate("/");
+  };
+
+  const handleKickPlayer = (playerId: string) => {
+    if (isHost) {
+      socket.emit("kick-player", playerId);
     }
   };
 
   const handleTimerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newTimer = Number(e.target.value);
     setLocalTimer(newTimer);
-    // Optionally, emit update-room to server immediately if desired, but the request is to make it local.
-    // If we want other players to see the slider move, we'd still emit.
-    // For "local" working, we only update local state.
-    // The server will get the final values on "start-game".
   };
 
   const handleCardsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newCards = Number(e.target.value);
     setLocalCards(newCards);
-    // Same as above, only update local state for "local" working.
   };
 
   return (
     <div className="w-[100dvw] h-[100dvh] bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex flex-col justify-center items-center p-4">
-      {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-16 left-16 w-24 h-24 bg-blue-200 rounded-full opacity-20 animate-pulse"></div>
         <div className="absolute top-32 right-24 w-20 h-20 bg-purple-200 rounded-full opacity-30 animate-bounce"></div>
@@ -60,7 +74,6 @@ export default function Menu({ next }: { next: () => void }) {
       </div>
 
       <div className="w-full max-w-4xl space-y-8 relative z-10">
-        {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             🎮 Game Settings
@@ -71,7 +84,6 @@ export default function Menu({ next }: { next: () => void }) {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Players Section */}
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
@@ -101,6 +113,14 @@ export default function Menu({ next }: { next: () => void }) {
                       </span>
                     )}
                   </div>
+                  {isHost && p.id !== roomData.hostID && (
+                    <button
+                      onClick={() => handleKickPlayer(p.id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                    >
+                      Kick
+                    </button>
+                  )}
                 </div>
               ))}
 
@@ -113,7 +133,6 @@ export default function Menu({ next }: { next: () => void }) {
             </div>
           </div>
 
-          {/* Game Options Section */}
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-6">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
@@ -123,7 +142,6 @@ export default function Menu({ next }: { next: () => void }) {
             </div>
 
             <div className="space-y-8">
-              {/* Timer Setting */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">⏱️</span>
@@ -136,8 +154,8 @@ export default function Menu({ next }: { next: () => void }) {
                     type="range"
                     max={11}
                     min={2}
-                    value={localTimer} // Use local state
-                    onChange={handleTimerChange} // Update local state
+                    value={localTimer}
+                    onChange={handleTimerChange}
                     disabled={!isHost}
                     className="w-full h-3 bg-gradient-to-r from-orange-200 to-red-200 rounded-lg appearance-none cursor-pointer slider disabled:opacity-100 disabled:cursor-not-allowed"
                   />
@@ -156,7 +174,6 @@ export default function Menu({ next }: { next: () => void }) {
                 </div>
               </div>
 
-              {/* Cards Setting */}
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">🃏</span>
@@ -169,8 +186,8 @@ export default function Menu({ next }: { next: () => void }) {
                     type="range"
                     max={5}
                     min={3}
-                    value={localCards} // Use local state
-                    onChange={handleCardsChange} // Update local state
+                    value={localCards}
+                    onChange={handleCardsChange}
                     disabled={!isHost}
                     className="w-full h-3 bg-gradient-to-r from-green-200 to-emerald-200 rounded-lg appearance-none cursor-pointer slider disabled:opacity-50 disabled:cursor-not-allowed"
                   />
@@ -190,7 +207,6 @@ export default function Menu({ next }: { next: () => void }) {
           </div>
         </div>
 
-        {/* Start Game Button */}
         <div className="text-center">
           <button
             onClick={handleStartGame}
@@ -204,6 +220,14 @@ export default function Menu({ next }: { next: () => void }) {
               ? "Ready to play! (Testing mode - no minimum players required)"
               : "Only the host can start the game."}
           </p>
+        </div>
+        <div className="text-center">
+          <button
+            onClick={handleLeaveRoom}
+            className="px-8 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600"
+          >
+            Leave Room
+          </button>
         </div>
       </div>
     </div>

@@ -1,3 +1,4 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const { createServer } = require("http");
@@ -8,13 +9,13 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: [process.env.FRONTEND_ROUTE, "http://localhost:5173"],
     methods: ["GET", "POST"],
   },
   transports: ["websocket", "polling"],
 });
 
-const rooms = [];
+let rooms = [];
 
 const cardTypes = [
   "apple",
@@ -50,14 +51,6 @@ function shuffle(arr) {
   return shuffled;
 }
 
-// function distributeCards(arr, chunkSize) {
-//   const result = [];
-//   for (let i = 0; i < arr.length; i += chunkSize) {
-//     result.push(arr.slice(i, i + chunkSize));
-//   }
-//   return result;
-// }
-
 const createRoomCode = (length) => {
   const characters = "1234567890abcdefghijklmnopqrstuvwxyz";
   let code = "";
@@ -91,6 +84,39 @@ const createRoom = (roomId, hostID, hostNickname) => {
   return roomData;
 };
 
+const leaveRoom = (socket) => {
+  const room = rooms.find((r) => r.players.some((p) => p.id === socket.id));
+  if (room) {
+    const playerIndex = room.players.findIndex((p) => p.id === socket.id);
+    if (playerIndex !== -1) {
+      const leavingPlayer = room.players[playerIndex];
+      console.log(
+        `Player ${leavingPlayer.nickname} is leaving room ${room.roomId}`
+      );
+      room.players.splice(playerIndex, 1);
+
+      if (room.players.length === 0) {
+        rooms = rooms.filter((r) => r.roomId !== room.roomId);
+        console.log(`Room ${room.roomId} is empty and has been deleted.`);
+        return;
+      }
+
+      if (leavingPlayer.id === room.hostID) {
+        room.hostID = room.players[0].id;
+        console.log(
+          `Host left. New host is ${room.players[0].nickname} in room ${room.roomId}`
+        );
+      }
+
+      io.to(room.roomId).emit("room-updated", room);
+      io.to(room.roomId).emit("player-left", {
+        playerId: leavingPlayer.id,
+        playerName: leavingPlayer.nickname,
+      });
+    }
+  }
+};
+
 io.on("connection", (socket) => {
   console.log(socket.id + " is connected");
 
@@ -99,7 +125,7 @@ io.on("connection", (socket) => {
     const code = createRoomCode(4);
     socket.join(code);
     const roomData = createRoom(code, socket.id, nickname);
-    io.emit("room-created", roomData);
+    socket.emit("room-created", roomData);
     rooms.push(roomData);
     console.log(rooms);
   });
@@ -139,7 +165,6 @@ io.on("connection", (socket) => {
       const deck = createDeck(cardTypes, numPlayers, numCards);
       const shuffledDeck = shuffle(deck);
 
-      // Distribute cards to players, giving the first player an extra card
       room.players[0].cards = shuffledDeck.splice(0, numCards + 1);
       for (let i = 1; i < numPlayers; i++) {
         room.players[i].cards = shuffledDeck.splice(0, numCards);
@@ -152,21 +177,19 @@ io.on("connection", (socket) => {
         );
       }
 
-      room.deck = shuffledDeck; // The rest of the cards form the deck
+      room.deck = shuffledDeck;
       room.status = "game";
       room.timer = duration;
       room.cards = numCards;
 
-      io.to(roomId).emit("game-started", room); //menu
-      io.to(roomId).emit("room-updated", room); // game
+      io.to(roomId).emit("game-started", room);
+      io.to(roomId).emit("room-updated", room);
       console.log(`Game started in room ${roomId}. Updated room:`, room);
     } else {
       console.log(`Room ${roomId} not found when trying to start game.`);
       socket.emit("start-game-error", `Room ${roomId} not found.`);
     }
   });
-
-  // pass the card to the next player then remove it from your hand
 
   socket.on("pass-card", (cardId, roomId) => {
     if (!roomId) {
@@ -184,7 +207,6 @@ io.on("connection", (socket) => {
       console.log(
         `It's not player ${socket.id}'s turn in room ${room.roomId}.`
       );
-      // Maybe emit an error to the client.
       socket.emit("not-your-turn");
       return;
     }
@@ -193,6 +215,23 @@ io.on("connection", (socket) => {
       (p) => p.id === socket.id
     );
     const currentPlayer = room.players[currentPlayerIndex];
+
+    // Check for a winner before passing a card
+    if (
+      currentPlayer.cards.length > 0 &&
+      currentPlayer.cards.every((card) => card.type === currentPlayer.cards[0].type)
+    ) {
+      room.status = "complete";
+      console.log(`Player ${currentPlayer.nickname} has won the game!`);
+      io.to(room.roomId).emit("game-winner", {
+        winnerId: currentPlayer.id,
+        winnerNickname: currentPlayer.nickname,
+        winningCardType: currentPlayer.cards[0].type,
+        numTurns: room.numTurns,
+      });
+      io.to(room.roomId).emit("room-updated", room);
+      return;
+    }
 
     const cardIndex = currentPlayer.cards.findIndex((c) => c.id === cardId);
     if (cardIndex === -1) {
@@ -208,7 +247,6 @@ io.on("connection", (socket) => {
     nextPlayer.cards.push(passedCard);
     room.numTurns += 1;
 
-    // Check for winner
     let winner = null;
     for (const player of room.players) {
       if (
@@ -241,8 +279,6 @@ io.on("connection", (socket) => {
       io.to(room.roomId).emit("room-updated", room);
     }
   });
-
-  // updating the options in the menu for all players to see
 
   socket.on("update-settings", (updatedRoomData) => {
     const room = rooms.find((r) => r.roomId === updatedRoomData.roomId);
@@ -277,8 +313,6 @@ io.on("connection", (socket) => {
     }
   });
 
-  // when the game finishes and the leader clicks go to lobby, all the players must be directed
-
   socket.on("go-to-menu", (roomData) => {
     if (!roomData) {
       console.log(`Could not find a room for socket ${socket.id}`);
@@ -296,6 +330,32 @@ io.on("connection", (socket) => {
     room.numTurns = 0;
     room.deck = [];
     io.to(room.roomId).emit("room-updated", room);
+  });
+
+  socket.on("leave-room", () => {
+    leaveRoom(socket);
+  });
+
+  socket.on("kick-player", (playerId) => {
+    const room = rooms.find((r) => r.hostID === socket.id);
+    if (room) {
+      const playerSocket = io.sockets.sockets.get(playerId);
+      if (playerSocket) {
+        playerSocket.disconnect(true);
+      }
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log(socket.id + " is disconnected");
+    leaveRoom(socket);
+  });
+
+  socket.on("check-room", () => {
+    const room = rooms.find((r) => r.players.some((p) => p.id === socket.id));
+    if (room) {
+      socket.emit("in-room", room);
+    }
   });
 });
 
