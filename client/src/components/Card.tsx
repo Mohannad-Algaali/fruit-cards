@@ -44,9 +44,10 @@ export default function Card({
         rounded-2xl shadow-lg hover:shadow-xl
         flex flex-col justify-center items-center
         cursor-pointer transition-all duration-200
-        ${selected 
-          ? "ring-4 ring-yellow-400 ring-opacity-75 shadow-2xl" 
-          : "hover:ring-2 hover:ring-white hover:ring-opacity-50"
+        ${
+          selected
+            ? "ring-4 ring-yellow-400 ring-opacity-75 shadow-2xl"
+            : "hover:ring-2 hover:ring-white hover:ring-opacity-50"
         }
         relative overflow-hidden
       `}
@@ -60,13 +61,13 @@ export default function Card({
       </div>
 
       {/* Fruit emoji */}
-      <div className="text-4xl sm:text-5xl md:text-6xl mb-2 drop-shadow-lg">
+      <div className="text-5xl sm:text-5xl md:text-7xl mb-2 drop-shadow-lg">
         {emoji}
       </div>
 
       {/* Fruit name */}
       <div className="text-white font-bold text-xs sm:text-sm capitalize drop-shadow-md">
-        {cardName}
+        {/* {cardName} */}
       </div>
 
       {/* Selection indicator */}

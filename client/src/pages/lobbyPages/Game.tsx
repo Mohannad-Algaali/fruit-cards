@@ -179,7 +179,9 @@ export default function Game({
                       }[fruit]
                     }
                   </span>
-                  <span className="font-bold ml-1 text-sm sm:text-md">x{count}</span>
+                  <span className="font-bold ml-1 text-sm sm:text-md">
+                    x{count}
+                  </span>
                 </div>
               ))}
           </div>
@@ -187,7 +189,9 @@ export default function Game({
 
         <div className="flex items-center space-x-2">
           <span className="text-sm">⏱️</span>
-          <span className="text-base sm:text-lg font-semibold">{roomData.timer}s</span>
+          <span className="text-base sm:text-lg font-semibold">
+            {roomData.timer}s
+          </span>
         </div>
       </div>
 
@@ -218,22 +222,22 @@ export default function Game({
           <div className="relative flex justify-center items-end h-48 sm:h-56 md:h-64 mb-4 sm:mb-6">
             {cards.map((card, index) => {
               const isSelected = selectedCard.card?.id === card.id;
-              const rotation = (index - (cards.length - 1) / 2) * 8; // Calculate rotation angle
+              const rotation = (index - (cards.length - 1) / 2) * 32; // Calculate rotation angle
+              const spread = 0.5;
+              const tx = rotation * spread;
               return (
                 <div
                   key={card.id}
-                  className={`absolute transform transition-all duration-300 ${
+                  className={`absolute transform transition-all duration-300 -translate-y-16 ${
                     isMyTurn
-                      ? "cursor-pointer hover:z-10"
+                      ? "cursor-pointer "
                       : "cursor-not-allowed opacity-80"
                   } ${
-                    isSelected
-                      ? "!-translate-y-8 z-10"
-                      : "hover:-translate-y-4"
+                    isSelected ? "!-translate-y-18 " : "hover:-translate-y-10"
                   }`}
                   style={{
-                    transform: `rotate(${rotation}deg)`,
-                    transformOrigin: "bottom center",
+                    transform: `rotate(${rotation}deg) translateX(${tx}px)`,
+                    transformOrigin: `bottom`,
                   }}
                   onClick={() => {
                     if (!isMyTurn) return;
@@ -244,10 +248,7 @@ export default function Game({
                     }
                   }}
                 >
-                  <Card
-                    cardName={card.type}
-                    selected={isSelected}
-                  />
+                  <Card cardName={card.type} selected={isSelected} />
                 </div>
               );
             })}
