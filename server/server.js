@@ -148,7 +148,7 @@ io.on("connection", (socket) => {
         room.players.map((p) => p.nickname)
       );
       io.to(socket.id).emit("joined-room", room); //Home
-      io.to(roomCode).emit("room-updated", room); // Lobby
+      io.to(roomCode).broadcast("room-updated", room); // Lobby
       console.log(room);
     } else {
       console.log(`Room ${roomCode} not found.`);
@@ -295,7 +295,7 @@ io.on("connection", (socket) => {
         room.timer = updatedRoomData.timer;
         room.cards = updatedRoomData.cards;
 
-        io.to(room.roomId).emit("room-updated", room);
+        io.to(room.roomId).broadcast("room-updated", room);
         console.log(
           `Room ${room.roomId} settings updated by host. New settings:`,
           {
