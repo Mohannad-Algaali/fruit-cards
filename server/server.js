@@ -10,7 +10,6 @@ const server = createServer(app);
 
 app.get("/", (req, res) => {
   res.status(200).send("Welcome to Fruit Cards Server 🍓");
-  res.end();
 });
 
 const io = new Server(server, {
