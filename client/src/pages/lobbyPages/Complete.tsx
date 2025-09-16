@@ -2,6 +2,7 @@ import { useContext } from "react";
 import { RoomContext } from "../Lobby";
 import socket from "../../services/Socket";
 import type { RoomData } from "../../types/types";
+import { useNavigate } from "react-router-dom";
 // Define WinnerInfo type based on server payload (copied from Lobby.tsx)
 type WinnerInfo = {
   winnerId: string;
@@ -18,6 +19,11 @@ export default function Complete({
   winnerInfo: WinnerInfo | null;
 }) {
   const roomData: RoomData = useContext(RoomContext);
+  const navigate = useNavigate();
+
+  if (roomData.status === "menu") {
+    navigate(`/lobby/${roomData.roomId}`, { state: { data: roomData } });
+  }
   return (
     <div className="h-[100dvh] w-[100dvw] bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 flex justify-center items-center p-4">
       {/* Background decorative elements */}
@@ -66,7 +72,9 @@ export default function Complete({
                 <div className="text-xl sm:text-2xl font-bold text-orange-600">
                   {winnerInfo?.numTurns || 0}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600">Total Turns</div>
+                <div className="text-xs sm:text-sm text-gray-600">
+                  Total Turns
+                </div>
               </div>
               <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
                 <div className="text-xl sm:text-2xl font-bold text-emerald-600">
@@ -82,7 +90,9 @@ export default function Complete({
                   {winnerInfo?.winningCardType === "cherry" && "🍒"}
                   {!winnerInfo?.winningCardType && "❓"}
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600">Winning Fruit</div>
+                <div className="text-xs sm:text-sm text-gray-600">
+                  Winning Fruit
+                </div>
               </div>
             </div>
           </div>
