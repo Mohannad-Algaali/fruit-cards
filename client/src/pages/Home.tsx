@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import socket from "../services/Socket";
 import type { RoomData } from "../types/types";
+import { useTranslation } from "react-i18next";
 
 export default function Home() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const [nickname, setNickname] = useState("");
@@ -23,7 +25,7 @@ export default function Home() {
 
     socket.on("room-not-found", (roomCode: string) => {
       console.log("room not found:", roomCode);
-      setRoomError("Room not found. Please check the room code.");
+      setRoomError(t("home.roomNotFoundError"));
     });
 
     socket.on("in-room", (data: RoomData) => {
@@ -40,26 +42,30 @@ export default function Home() {
       socket.off("room-not-found");
       socket.off("in-room");
     };
-  }, [navigate]);
+  }, [navigate, t]);
 
   const handleJoinRoom = () => {
     if (!roomCode) {
-      setRoomError("Room code is required");
+      setRoomError(t("home.roomCodeRequiredError"));
       return;
     }
 
     if (!nickname) {
-      setRoomError("Nickname is required");
+      setRoomError(t("home.nicknameRequiredError"));
       return;
     }
 
     // Clear any previous errors
     setRoomError("");
-    
+
     socket.emit("join-room", nickname, roomCode);
   };
   const handleCreateRoom = () => {
     socket.emit("create-room", nickname || "Player123");
+  };
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
   };
 
   return (
@@ -75,11 +81,11 @@ export default function Home() {
       <div className="bg-white/90 backdrop-blur-sm shadow-2xl rounded-3xl min-h-[70dvh] w-full max-w-sm sm:max-w-md flex flex-col justify-center items-center p-4 sm:p-8 space-y-6 sm:space-y-8 relative z-10">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-emerald-600 via-orange-500 to-pink-500 bg-clip-text text-transparent">
-            🍎 Fruit Cards 🍌
+          <h1 className="text-4xl sm:text-4xl font-bold bg-gradient-to-r from-emerald-600 via-orange-500 to-pink-500 bg-clip-text text-transparent">
+            {t("home.title")}
           </h1>
           <p className="text-gray-600 text-base sm:text-lg">
-            Collect matching fruits to win!
+            {t("home.subtitle")}
           </p>
         </div>
 
@@ -91,13 +97,13 @@ export default function Home() {
               htmlFor="nickname"
               className="block text-sm font-semibold text-gray-700"
             >
-              Your Nickname
+              {t("home.nicknameLabel")}
             </label>
             <input
               id="nickname"
               type="text"
               className="w-full px-4 py-2 sm:py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:ring-2 focus:ring-emerald-200 transition-all duration-200 text-base sm:text-lg placeholder-gray-400"
-              placeholder="Enter your nickname..."
+              placeholder={t("home.nicknamePlaceholder")}
               onChange={(e) => setNickname(e.target.value)}
               value={nickname}
             />
@@ -109,7 +115,7 @@ export default function Home() {
               htmlFor="room"
               className="block text-sm font-semibold text-gray-700"
             >
-              Room Code
+              {t("home.roomCodeLabel")}
             </label>
             <input
               id="room"
@@ -138,20 +144,44 @@ export default function Home() {
             onClick={handleJoinRoom}
             disabled={!roomCode || !nickname}
           >
-            🚪 Join Room
+            {t("home.joinRoomButton")}
           </button>
           <button
             className="w-full py-3 sm:py-4 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-base sm:text-lg"
             onClick={handleCreateRoom}
             disabled={!nickname}
           >
-            ✨ Create New Room
+            {t("home.createRoomButton")}
+          </button>
+        </div>
+
+        {/* Language Switcher */}
+        <div className="flex space-x-4">
+          <button
+            onClick={() => changeLanguage("en")}
+            className={`px-3 py-1 rounded-md ${
+              i18n.language === "en"
+                ? "bg-emerald-500 text-white"
+                : "bg-gray-200"
+            }`}
+          >
+            English
+          </button>
+          <button
+            onClick={() => changeLanguage("ar")}
+            className={`px-3 py-1 rounded-md ${
+              i18n.language === "ar"
+                ? "bg-emerald-500 text-white"
+                : "bg-gray-200"
+            }`}
+          >
+            العربية
           </button>
         </div>
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-500">
-          <p>🎮 Real-time multiplayer fun!</p>
+          <p>{t("home.footer")}</p>
         </div>
       </div>
     </div>

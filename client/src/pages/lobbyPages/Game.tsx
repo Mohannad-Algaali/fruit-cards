@@ -2,6 +2,7 @@ import { useState, useEffect, useContext } from "react";
 import Card from "../../components/Card";
 import socket from "../../services/Socket";
 import { RoomContext } from "../Lobby";
+import { useTranslation } from "react-i18next";
 
 // --- Types ---
 type CardType = {
@@ -33,6 +34,7 @@ export default function Game({
   next: () => void;
 }) {
   const roomData = useContext<RoomData>(RoomContext);
+  const { t } = useTranslation();
 
   const [cards, setCards] = useState<CardType[]>([]);
   const [selectedCard, setSelectedCard] = useState<{
@@ -143,11 +145,15 @@ export default function Game({
           <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
             <span className="text-sm">🎮</span>
           </div>
-          <h1 className="text-lg sm:text-xl font-bold">Room: #{roomId}</h1>
+          <h1 className="text-lg sm:text-xl font-bold">
+            {t("game.roomHeader", { roomId })}
+          </h1>
         </div>
 
         <div className="flex items-center space-x-2">
-          <span className="text-xs sm:text-sm font-semibold">In Play:</span>
+          <span className="text-xs sm:text-sm font-semibold">
+            {t("game.inPlay")}
+          </span>
           <div className="flex flex-wrap items-center gap-1 sm:gap-2">
             {Object.entries(
               roomData.players
@@ -190,7 +196,8 @@ export default function Game({
         <div className="flex items-center space-x-2">
           <span className="text-sm">⏱️</span>
           <span className="text-base sm:text-lg font-semibold">
-            {roomData.timer}s
+            {roomData.timer}
+            {t("game.timerUnit")}
           </span>
         </div>
       </div>
@@ -210,12 +217,10 @@ export default function Game({
         >
           <div className="text-center mb-4">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-1 sm:mb-2">
-              {isMyTurn ? "Your Turn!" : "Your Cards"}
+              {isMyTurn ? t("game.yourTurn") : t("game.yourCards")}
             </h2>
             <p className="text-xs sm:text-sm text-gray-500">
-              {isMyTurn
-                ? "Select a card to pass to the next player"
-                : "Wait for your turn..."}
+              {isMyTurn ? t("game.passCardInstruction") : t("game.waitForTurn")}
             </p>
           </div>
 
@@ -261,7 +266,8 @@ export default function Game({
                 onClick={handlePassCard}
                 className="px-6 sm:px-8 py-2 sm:py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-base sm:text-lg rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 animate-pulse"
               >
-                🚀 Pass {selectedCard.card.type} Card
+                {t("game.passCardButton")}{" "}
+                {/*{ cardType: selectedCard.card.type })*/}
               </button>
             </div>
           )}

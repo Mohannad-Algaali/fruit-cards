@@ -2,6 +2,8 @@ import { useContext } from "react";
 import { RoomContext } from "../Lobby";
 import socket from "../../services/Socket";
 import type { RoomData } from "../../types/types";
+import { useTranslation } from "react-i18next";
+
 // Define WinnerInfo type based on server payload (copied from Lobby.tsx)
 type WinnerInfo = {
   winnerId: string;
@@ -18,6 +20,7 @@ export default function Complete({
   winnerInfo: WinnerInfo | null;
 }) {
   const roomData: RoomData = useContext(RoomContext);
+  const { t } = useTranslation();
 
   return (
     <div className="h-[100dvh] w-[100dvw] bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 flex justify-center items-center p-4">
@@ -34,7 +37,7 @@ export default function Complete({
         <div className="text-center space-y-4">
           <div className="text-7xl sm:text-8xl animate-bounce">🎉</div>
           <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-yellow-600 via-orange-500 to-red-500 bg-clip-text text-transparent">
-            Game Over!
+            {t("complete.gameOver")}
           </h1>
         </div>
 
@@ -50,7 +53,7 @@ export default function Complete({
               </span>
             </h2>
           </div>
-          <p className="text-lg sm:text-xl text-gray-600">has won the game!</p>
+          <p className="text-lg sm:text-xl text-gray-600">{t("complete.playerWon")}</p>
         </div>
 
         {/* Game Stats */}
@@ -59,7 +62,7 @@ export default function Complete({
             <div className="flex items-center justify-center space-x-2">
               <span className="text-xl sm:text-2xl">🃏</span>
               <span className="text-base sm:text-lg font-semibold text-gray-700">
-                Game Statistics
+                {t("complete.gameStatistics")}
               </span>
             </div>
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -68,7 +71,7 @@ export default function Complete({
                   {winnerInfo?.numTurns || 0}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-600">
-                  Total Turns
+                  {t("complete.totalTurns")}
                 </div>
               </div>
               <div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
@@ -86,7 +89,7 @@ export default function Complete({
                   {!winnerInfo?.winningCardType && "❓"}
                 </div>
                 <div className="text-xs sm:text-sm text-gray-600">
-                  Winning Fruit
+                  {t("complete.winningFruit")}
                 </div>
               </div>
             </div>
@@ -100,13 +103,13 @@ export default function Complete({
             disabled={socket.id !== roomData?.hostID}
             className="w-full py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg sm:text-xl rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            🎮 Play Again
+            {t("complete.playAgain")}
           </button>
           <button
             onClick={() => (window.location.href = "/")}
             className="w-full py-2 sm:py-3 bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white font-semibold text-base sm:text-lg rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
           >
-            🏠 Back to Home
+            {t("complete.backToHome")}
           </button>
         </div>
       </div>
