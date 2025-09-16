@@ -55,6 +55,10 @@ export default function Lobby() {
         navigate("/");
       }
 
+      if (updatedRoomData.status === "menu") {
+        setGamePhase(updatedRoomData.status);
+      }
+
       setRoomData(updatedRoomData);
     };
 
