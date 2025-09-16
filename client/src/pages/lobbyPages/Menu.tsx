@@ -17,13 +17,21 @@ export default function Menu({ next }: { next: () => void }) {
   }, [roomData.timer, roomData.cards]);
 
   useEffect(() => {
-    const updatedRoomData = {
-      ...roomData,
-      timer: localTimer,
-      cards: localCards,
+    if (socket.id !== roomData.hostID) return;
+
+    const handler = setTimeout(() => {
+      const updatedRoomData = {
+        ...roomData,
+        timer: localTimer,
+        cards: localCards,
+      };
+      socket.emit("update-settings", updatedRoomData);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
     };
-    socket.emit("update-settings", updatedRoomData);
-  }, [localTimer, localCards]);
+  }, [localTimer, localCards, roomData]);
 
   useEffect(() => {
     const handleBeforeUnload = () => {
@@ -138,7 +146,9 @@ export default function Menu({ next }: { next: () => void }) {
               <div className="w-8 h-8 bg-gradient-to-r from-orange-500 to-red-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm">⚙️</span>
               </div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Game Options</h2>
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
+                Game Options
+              </h2>
             </div>
 
             <div className="space-y-6 sm:space-y-8">
