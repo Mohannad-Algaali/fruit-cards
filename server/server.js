@@ -10,11 +10,101 @@ const server = createServer(app);
 
 app.get("/", (req, res) => {
   res.send({ status: "ok" });
+  res.end(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fun Landing Page</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 3rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    p {
+      font-size: 1.2rem;
+      margin-top: 1rem;
+      animation: fadeIn 3s ease-in-out forwards;
+    }
+
+    .btn {
+      margin-top: 2rem;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 50px;
+      background: #fff;
+      color: #764ba2;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.3s ease, background 0.3s ease;
+    }
+    .btn:hover {
+      background: #f3f3f3;
+      transform: scale(1.1);
+    }
+
+    /* Floating animation */
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Bubbles animation */
+    .bubble {
+      position: absolute;
+      bottom: -100px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 50%;
+      animation: rise 10s infinite ease-in;
+    }
+
+    @keyframes rise {
+      0% { transform: translateY(0) scale(0); opacity: 1; }
+      100% { transform: translateY(-110vh) scale(1); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Welcome to the Fun Zone ✨</h1>
+  <p>Enjoy the vibes and let the bubbles float around!</p>
+  <button class="btn">Get Started</button>
+
+  <!-- Bubbles -->
+  <div class="bubble" style="left:10%; width:40px; height:40px; animation-duration: 8s;"></div>
+  <div class="bubble" style="left:25%; width:25px; height:25px; animation-duration: 12s;"></div>
+  <div class="bubble" style="left:40%; width:60px; height:60px; animation-duration: 15s;"></div>
+  <div class="bubble" style="left:55%; width:35px; height:35px; animation-duration: 9s;"></div>
+  <div class="bubble" style="left:70%; width:50px; height:50px; animation-duration: 11s;"></div>
+  <div class="bubble" style="left:85%; width:20px; height:20px; animation-duration: 13s;"></div>
+</body>
+</html>
+`);
 });
 
 const io = new Server(server, {
   cors: {
-    origin: [process.env.FRONTEND_ROUTE, "http://localhost:5173", "*"],
+    origin: [process.env.FRONTEND_ROUTE, "http://localhost:5173"],
     methods: ["GET", "POST"],
   },
   transports: ["websocket", "polling"],
@@ -366,9 +456,6 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+server.server.listen(3000, () => {
+  console.log("listening on 3000");
 });
-
-module.exports = server;
