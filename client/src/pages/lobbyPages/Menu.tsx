@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { RoomContext } from "../Lobby";
 import type { RoomData } from "../../types/types";
 import socket from "../../services/Socket";
+import { useTranslation } from "react-i18next";
 
 export default function Menu({ next }: { next: () => void }) {
   const roomData = useContext<RoomData>(RoomContext);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [localTimer, setLocalTimer] = useState(roomData.timer);
   const [localCards, setLocalCards] = useState(roomData.cards);
@@ -84,10 +86,10 @@ export default function Menu({ next }: { next: () => void }) {
       <div className="w-full max-w-md sm:max-w-2xl lg:max-w-4xl space-y-6 sm:space-y-8 relative z-10">
         <div className="text-center space-y-2">
           <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            🎮 Game Settings
+            {t("menu.title")}
           </h1>
           <p className="text-gray-600 text-base sm:text-lg">
-            Configure your game and wait for players!
+            {t("menu.subtitle")}
           </p>
         </div>
 
@@ -98,7 +100,7 @@ export default function Menu({ next }: { next: () => void }) {
                 <span className="text-white text-sm">👥</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-                Players in Room
+                {t("menu.playersInRoom")}
               </h2>
             </div>
 
@@ -117,7 +119,7 @@ export default function Menu({ next }: { next: () => void }) {
                     </span>
                     {p.id === roomData.hostID && (
                       <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">
-                        👑 Leader
+                        {t("menu.leader")}
                       </span>
                     )}
                   </div>
@@ -126,7 +128,7 @@ export default function Menu({ next }: { next: () => void }) {
                       onClick={() => handleKickPlayer(p.id)}
                       className="px-2 sm:px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-xs sm:text-sm"
                     >
-                      Kick
+                      {t("menu.kick")}
                     </button>
                   )}
                 </div>
@@ -135,7 +137,7 @@ export default function Menu({ next }: { next: () => void }) {
               {roomData.players.length < 2 && (
                 <div className="text-center py-8 text-gray-500">
                   <div className="text-4xl mb-2">⏳</div>
-                  <p>Waiting for more players...</p>
+                  <p>{t("menu.waitingForPlayers")}</p>
                 </div>
               )}
             </div>
@@ -147,7 +149,7 @@ export default function Menu({ next }: { next: () => void }) {
                 <span className="text-white text-sm">⚙️</span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-                Game Options
+                {t("menu.gameOptions")}
               </h2>
             </div>
 
@@ -156,7 +158,7 @@ export default function Menu({ next }: { next: () => void }) {
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">⏱️</span>
                   <label className="text-base sm:text-lg font-semibold text-gray-700">
-                    Turn Timer
+                    {t("menu.turnTimer")}
                   </label>
                 </div>
                 <div className="px-4">
@@ -170,16 +172,16 @@ export default function Menu({ next }: { next: () => void }) {
                     className="w-full h-3 bg-gradient-to-r from-orange-200 to-red-200 rounded-lg appearance-none cursor-pointer slider disabled:opacity-100 disabled:cursor-not-allowed"
                   />
                   <div className="flex justify-between text-xs sm:text-sm text-gray-500 mt-2">
-                    <span>2s</span>
-                    <span>10s</span>
-                    <span>∞</span>
+                    <span>2{t("menu.timerUnit", { count: 2 })}</span>
+                    <span>6{t("menu.timerUnit", { count: 10 })}</span>
+                    <span>{t("menu.infiniteSymbol")}</span>
                   </div>
                 </div>
                 <div className="text-center">
                   <span className="inline-block px-3 sm:px-4 py-2 bg-gradient-to-r from-orange-100 to-red-100 rounded-full font-semibold text-orange-800 text-sm sm:text-base">
                     {localTimer > 10
-                      ? "⏰ Unlimited Time"
-                      : `⏰ ${localTimer} seconds per turn`}
+                      ? t("menu.unlimitedTime")
+                      : t("menu.secondsPerTurn", { count: localTimer })}
                   </span>
                 </div>
               </div>
@@ -188,7 +190,7 @@ export default function Menu({ next }: { next: () => void }) {
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">🃏</span>
                   <label className="text-base sm:text-lg font-semibold text-gray-700">
-                    Cards per Player
+                    {t("menu.cardsPerPlayer")}
                   </label>
                 </div>
                 <div className="px-4">
@@ -209,7 +211,7 @@ export default function Menu({ next }: { next: () => void }) {
                 </div>
                 <div className="text-center">
                   <span className="inline-block px-3 sm:px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full font-semibold text-green-800 text-sm sm:text-base">
-                    🃏 {localCards} cards per player
+                    {t("menu.cardsPerPlayerCount", { count: localCards })}
                   </span>
                 </div>
               </div>
@@ -223,12 +225,10 @@ export default function Menu({ next }: { next: () => void }) {
             disabled={!isHost}
             className="px-8 sm:px-12 py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg sm:text-xl rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isHost ? "🚀 Start Game" : "Waiting for Host..."}
+            {isHost ? t("menu.startGame") : t("menu.waitingForHost")}
           </button>
           <p className="text-gray-500 text-xs sm:text-sm mt-2">
-            {isHost
-              ? "Ready to play! (Testing mode - no minimum players required)"
-              : "Only the host can start the game."}
+            {isHost ? t("menu.hostStartMessage") : t("menu.playerStartMessage")}
           </p>
         </div>
         <div className="text-center">
@@ -236,7 +236,7 @@ export default function Menu({ next }: { next: () => void }) {
             onClick={handleLeaveRoom}
             className="px-6 sm:px-8 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 text-sm sm:text-base"
           >
-            Leave Room
+            {t("menu.leaveRoom")}
           </button>
         </div>
       </div>

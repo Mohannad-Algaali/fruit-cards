@@ -1,0 +1,55 @@
+{
+  "home": {
+    "title": "🍎 Fruit Cards 🍌",
+    "subtitle": "Collect matching fruits to win!",
+    "nicknameLabel": "Your Nickname",
+    "nicknamePlaceholder": "Enter your nickname...",
+    "roomCodeLabel": "Room Code",
+    "roomNotFoundError": "Room not found. Please check the room code.",
+    "roomCodeRequiredError": "Room code is required",
+    "nicknameRequiredError": "Nickname is required",
+    "joinRoomButton": "🚪 Join Room",
+    "createRoomButton": "✨ Create New Room",
+    "footer": "🎮 Real-time multiplayer fun!"
+  },
+  "menu": {
+    "title": "🎮 Game Settings",
+    "subtitle": "Configure your game and wait for players!",
+    "playersInRoom": "Players in Room",
+    "leader": "👑 Leader",
+    "kick": "Kick",
+    "waitingForPlayers": "Waiting for more players...",
+    "gameOptions": "Game Options",
+    "turnTimer": "Turn Timer",
+    "timerUnit": "s",
+    "infiniteSymbol": "∞",
+    "unlimitedTime": "⏰ Unlimited Time",
+    "secondsPerTurn": "⏰ {{count}} seconds per turn",
+    "cardsPerPlayer": "Cards per Player",
+    "cardsPerPlayerCount": "🃏 {{count}} cards per player",
+    "startGame": "🚀 Start Game",
+    "waitingForHost": "Waiting for Host...",
+    "hostStartMessage": "Ready to play! (Testing mode - no minimum players required)",
+    "playerStartMessage": "Only the host can start the game.",
+    "leaveRoom": "Leave Room"
+  },
+  "game": {
+    "roomHeader": "Room: #{{roomId}}",
+    "inPlay": "In Play:",
+    "timerUnit": "s",
+    "yourTurn": "Your Turn!",
+    "yourCards": "Your Cards",
+    "passCardInstruction": "Select a card to pass to the next player",
+    "waitForTurn": "Wait for your turn...",
+    "passCardButton": "🚀 Pass Card"
+  },
+  "complete": {
+    "gameOver": "Game Over!",
+    "playerWon": "has won the game!",
+    "gameStatistics": "Game Statistics",
+    "totalTurns": "Total Turns",
+    "winningFruit": "Winning Fruit",
+    "playAgain": "🎮 Play Again",
+    "backToHome": "🏠 Back to Home"
+  }
+}
