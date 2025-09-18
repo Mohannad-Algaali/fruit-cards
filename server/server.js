@@ -20,6 +20,20 @@ const io = new Server(server, {
   transports: ["websocket", "polling"],
 });
 
+// In-memory mapping of userId to socketId
+const userSocketMap = new Map();
+
+io.use((socket, next) => {
+  const userId = socket.handshake.auth.userId;
+  if (userId) {
+    socket.userId = userId;
+    userSocketMap.set(userId, socket.id);
+    next();
+  } else {
+    next(new Error("unauthorized"));
+  }
+});
+
 let rooms = [];
 
 const cardTypes = [
@@ -90,15 +104,16 @@ const createRoom = (roomId, hostID, hostNickname) => {
 };
 
 const leaveRoom = (socket) => {
-  const room = rooms.find((r) => r.players.some((p) => p.id === socket.id));
+  const room = rooms.find((r) => r.players.some((p) => p.id === socket.userId));
   if (room) {
-    const playerIndex = room.players.findIndex((p) => p.id === socket.id);
+    const playerIndex = room.players.findIndex((p) => p.id === socket.userId);
     if (playerIndex !== -1) {
       const leavingPlayer = room.players[playerIndex];
       console.log(
         `Player ${leavingPlayer.nickname} is leaving room ${room.roomId}`
       );
       room.players.splice(playerIndex, 1);
+      userSocketMap.delete(socket.userId);
 
       if (room.players.length === 0) {
         rooms = rooms.filter((r) => r.roomId !== room.roomId);
@@ -123,13 +138,13 @@ const leaveRoom = (socket) => {
 };
 
 io.on("connection", (socket) => {
-  console.log(socket.id + " is connected");
+  console.log(socket.userId + " is connected with socket id " + socket.id);
 
   io.emit("connected", "hello ");
   socket.on("create-room", (nickname) => {
     const code = createRoomCode(4);
     socket.join(code);
-    const roomData = createRoom(code, socket.id, nickname);
+    const roomData = createRoom(code, socket.userId, nickname);
     socket.emit("room-created", roomData);
     rooms.push(roomData);
     console.log(rooms);
@@ -137,17 +152,17 @@ io.on("connection", (socket) => {
 
   socket.on("join-room", (nickname, roomCode) => {
     console.log(
-      `Player ${nickname} with id ${socket.id} trying to join room ${roomCode}`
+      `Player ${nickname} with id ${socket.userId} trying to join room ${roomCode}`
     );
     const room = rooms.find((r) => r.roomId === roomCode);
     if (room) {
       socket.join(roomCode);
-      room.players.push({ id: socket.id, nickname: nickname, cards: [] });
+      room.players.push({ id: socket.userId, nickname: nickname, cards: [] });
       console.log(
         `Player ${nickname} joined room ${roomCode}. Players:`,
         room.players.map((p) => p.nickname)
       );
-      io.to(socket.id).emit("joined-room", room); //Home
+      socket.emit("joined-room", room); //Home
       socket.broadcast.to(roomCode).emit("room-updated", room); // Lobby
       console.log(room);
     } else {
@@ -208,16 +223,16 @@ io.on("connection", (socket) => {
       return;
     }
 
-    if (room.turn !== socket.id) {
+    if (room.turn !== socket.userId) {
       console.log(
-        `It's not player ${socket.id}'s turn in room ${room.roomId}.`
+        `It's not player ${socket.userId}'s turn in room ${room.roomId}.`
       );
       socket.emit("not-your-turn");
       return;
     }
 
     const currentPlayerIndex = room.players.findIndex(
-      (p) => p.id === socket.id
+      (p) => p.id === socket.userId
     );
     const currentPlayer = room.players[currentPlayerIndex];
 
@@ -242,7 +257,9 @@ io.on("connection", (socket) => {
 
     const cardIndex = currentPlayer.cards.findIndex((c) => c.id === cardId);
     if (cardIndex === -1) {
-      console.log(`Card ${cardId} not found in player ${socket.id}'s hand.`);
+      console.log(
+        `Card ${cardId} not found in player ${socket.userId}'s hand.`
+      );
       return;
     }
 
@@ -291,7 +308,7 @@ io.on("connection", (socket) => {
     const room = rooms.find((r) => r.roomId === updatedRoomData.roomId);
 
     if (room) {
-      if (socket.id === room.hostID) {
+      if (socket.userId === room.hostID) {
         room.timer = updatedRoomData.timer;
         room.cards = updatedRoomData.cards;
 
@@ -305,7 +322,7 @@ io.on("connection", (socket) => {
         );
       } else {
         console.log(
-          `Attempt to update settings in room ${room.roomId} by non-host ${socket.id}.`
+          `Attempt to update settings in room ${room.roomId} by non-host ${socket.userId}.`
         );
         socket.emit(
           "update-settings-error",
@@ -344,22 +361,27 @@ io.on("connection", (socket) => {
   });
 
   socket.on("kick-player", (playerId) => {
-    const room = rooms.find((r) => r.hostID === socket.id);
+    const room = rooms.find((r) => r.hostID === socket.userId);
     if (room) {
-      const playerSocket = io.sockets.sockets.get(playerId);
-      if (playerSocket) {
-        playerSocket.disconnect(true);
+      const socketId = userSocketMap.get(playerId);
+      if (socketId) {
+        const playerSocket = io.sockets.sockets.get(socketId);
+        if (playerSocket) {
+          playerSocket.disconnect(true);
+        }
       }
     }
   });
 
   socket.on("disconnect", () => {
-    console.log(socket.id + " is disconnected");
+    console.log(socket.userId + " is disconnected");
     leaveRoom(socket);
   });
 
   socket.on("check-room", () => {
-    const room = rooms.find((r) => r.players.some((p) => p.id === socket.id));
+    const room = rooms.find((r) =>
+      r.players.some((p) => p.id === socket.userId)
+    );
     if (room) {
       socket.emit("in-room", room);
     }

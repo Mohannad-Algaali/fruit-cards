@@ -42,17 +42,22 @@ export default function Game({
     card: CardType | null;
   }>({ index: -1, card: null });
   const [players, setPlayers] = useState<Player[]>([]);
+  const [userId, setUserId] = useState("");
 
   // Derived state from context
   const turnPlayerId = roomData.turn;
   const turnPlayerIndex = roomData.players.findIndex(
     (p) => p.id === turnPlayerId
   );
-  const isMyTurn = socket.id === turnPlayerId;
+  const isMyTurn = userId === turnPlayerId;
+
+  useEffect(() => {
+    setUserId(localStorage.getItem("userId") || socket.id);
+  }, []);
 
   useEffect(() => {
     if (roomData && roomData.status === "game") {
-      const me = roomData.players.find((p) => p.id === socket.id);
+      const me = roomData.players.find((p) => p.id === userId);
       if (me) {
         setCards(me.cards);
       }

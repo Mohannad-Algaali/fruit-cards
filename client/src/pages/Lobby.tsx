@@ -21,6 +21,7 @@ export default function Lobby() {
   const navigate = useNavigate();
   const { data } = location.state || {};
 
+  const [userId, setUserId] = useState("");
   const [roomData, setRoomData] = useState<RoomData | null>(data);
   const [gamePhase, setGamePhase] = useState("menu");
   const [winnerInfo, setWinnerInfo] = useState<WinnerInfo | null>(null);
@@ -28,6 +29,10 @@ export default function Lobby() {
   const cardSound = useSound("/sound/card_pass.mp3");
   const winSound = useSound("/sound/game_win.mp3");
   const startSound = useSound("/sound/game_start.mp3");
+
+  useEffect(() => {
+    setUserId(localStorage.getItem("userId") || socket.id);
+  }, []);
 
   useEffect(() => {
     if (!roomData) {
@@ -48,16 +53,12 @@ export default function Lobby() {
         cardSound.play();
       }
 
-      const playerInRoom = updatedRoomData.players.find(
-        (p) => p.id === socket.id
-      );
+      const playerInRoom = updatedRoomData.players.find((p) => p.id === userId);
       if (!playerInRoom) {
         navigate("/");
       }
 
-      if (updatedRoomData.status === "menu") {
-        setGamePhase(updatedRoomData.status);
-      }
+      setGamePhase(updatedRoomData.status);
 
       setRoomData(updatedRoomData);
     };
@@ -86,10 +87,14 @@ export default function Lobby() {
       console.log(`player ${PlayerName} ID: ${PlayerId} left the game :(`);
     };
 
+    const handleDisconnect = () => {
+      navigate("/");
+    };
     socket.on("room-updated", handleRoomUpdate);
     socket.on("game-started", handleGameStarted);
     socket.on("game-winner", handleGameWinner);
     socket.on("player-left", handlePlayerLeft);
+    socket.on("disconnected", handleDisconnect);
 
     return () => {
       socket.off("room-updated", handleRoomUpdate);

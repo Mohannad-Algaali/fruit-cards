@@ -13,13 +13,15 @@ export default function Menu({ next }: { next: () => void }) {
   const [localTimer, setLocalTimer] = useState(roomData.timer);
   const [localCards, setLocalCards] = useState(roomData.cards);
 
+  const [userId, setUserId] = useState("");
+
   useEffect(() => {
     setLocalTimer(roomData.timer);
     setLocalCards(roomData.cards);
   }, [roomData.timer, roomData.cards]);
 
   useEffect(() => {
-    if (socket.id !== roomData.hostID) return;
+    if (userId !== roomData.hostID) return;
 
     const handler = setTimeout(() => {
       const updatedRoomData = {
@@ -36,6 +38,8 @@ export default function Menu({ next }: { next: () => void }) {
   }, [localTimer, localCards, roomData]);
 
   useEffect(() => {
+    setUserId(localStorage.getItem("userId") || socket.id);
+
     const handleBeforeUnload = () => {
       socket.emit("leave-room");
     };
@@ -45,7 +49,9 @@ export default function Menu({ next }: { next: () => void }) {
     };
   }, []);
 
-  const isHost = socket.id === roomData.hostID;
+  const isHost = userId === roomData.hostID;
+
+  console.log(`socket id : ${socket.id} , socket userId: ${userId}`);
 
   const handleStartGame = () => {
     if (isHost) {

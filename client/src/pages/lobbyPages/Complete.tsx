@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { RoomContext } from "../Lobby";
 import socket from "../../services/Socket";
 import type { RoomData } from "../../types/types";
@@ -20,7 +20,12 @@ export default function Complete({
   winnerInfo: WinnerInfo | null;
 }) {
   const roomData: RoomData = useContext(RoomContext);
+  const [userId, setUserId] = useState("");
   const { t } = useTranslation();
+
+  useEffect(() => {
+    setUserId(localStorage.getItem("userId") || socket.id);
+  }, []);
 
   return (
     <div className="h-[100dvh] w-[100dvw] bg-gradient-to-br from-yellow-50 via-orange-50 to-red-50 flex justify-center items-center p-4">
@@ -53,7 +58,9 @@ export default function Complete({
               </span>
             </h2>
           </div>
-          <p className="text-lg sm:text-xl text-gray-600">{t("complete.playerWon")}</p>
+          <p className="text-lg sm:text-xl text-gray-600">
+            {t("complete.playerWon")}
+          </p>
         </div>
 
         {/* Game Stats */}
@@ -100,7 +107,7 @@ export default function Complete({
         <div className="w-full space-y-3 sm:space-y-4">
           <button
             onClick={next}
-            disabled={socket.id !== roomData?.hostID}
+            disabled={userId !== roomData?.hostID}
             className="w-full py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg sm:text-xl rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t("complete.playAgain")}
