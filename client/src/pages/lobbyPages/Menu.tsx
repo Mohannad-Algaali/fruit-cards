@@ -35,15 +35,15 @@ export default function Menu({ next }: { next: () => void }) {
     };
   }, [localTimer, localCards, roomData]);
 
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      socket.emit("leave-room");
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, []);
+  // useEffect(() => {
+  //   const handleBeforeUnload = () => {
+  //     socket.emit("leave-room");
+  //   };
+  //   window.addEventListener("beforeunload", handleBeforeUnload);
+  //   return () => {
+  //     window.removeEventListener("beforeunload", handleBeforeUnload);
+  //   };
+  // }, []);
 
   const isHost = socket.id === roomData.hostID;
 
@@ -226,7 +226,7 @@ export default function Menu({ next }: { next: () => void }) {
         <div className="text-center space-y-4">
           <button
             onClick={handleStartGame}
-            disabled={!isHost || roomData.players.length < 3}
+            disabled={!isHost}
             className="px-8 sm:px-12 py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg sm:text-xl rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isHost ? t("menu.startGame") : t("menu.waitingForHost")}
