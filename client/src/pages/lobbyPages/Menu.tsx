@@ -158,7 +158,7 @@ export default function Menu({ next }: { next: () => void }) {
             </div>
 
             <div className="space-y-6 sm:space-y-8">
-              <div className="space-y-3 sm:space-y-4">
+              {/* <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-center space-x-2">
                   <span className="text-lg">⏱️</span>
                   <label className="text-base sm:text-lg font-semibold text-gray-700">
@@ -188,7 +188,7 @@ export default function Menu({ next }: { next: () => void }) {
                       : t("menu.secondsPerTurn", { count: localTimer })}
                   </span>
                 </div>
-              </div>
+              </div> */}
 
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-center space-x-2">
@@ -226,7 +226,7 @@ export default function Menu({ next }: { next: () => void }) {
         <div className="text-center space-y-4">
           <button
             onClick={handleStartGame}
-            disabled={!isHost}
+            disabled={!isHost || roomData.players.length < 3}
             className="px-8 sm:px-12 py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold text-lg sm:text-xl rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isHost ? t("menu.startGame") : t("menu.waitingForHost")}

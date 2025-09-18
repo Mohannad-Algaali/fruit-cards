@@ -88,8 +88,8 @@ export default function Game({
           // angle in radians (0° = top, clockwise)
           const angle = (i / n) * 2 * Math.PI - Math.PI / 2;
           // 35 % away from centre (responsive: clamp 6 rem – 12 rem)
-          const radius = "clamp(5rem, 30vmin, 10rem)";
-          const x = `calc(50% + ${radius}*1.1 * ${Math.cos(angle)})`;
+          const radius = "clamp(5rem, 16vmin, 6rem)";
+          const x = `calc(50% + ${radius}*1.1 * ${Math.cos(angle)} )`;
           const y = `calc(50% + ${radius}/0.9 * ${Math.sin(angle)})`;
 
           return (
@@ -193,13 +193,13 @@ export default function Game({
           </div>
         </div>
 
-        <div className="flex items-center space-x-2">
+        {/* <div className="flex items-center space-x-2">
           <span className="text-sm">⏱️</span>
           <span className="text-base sm:text-lg font-semibold">
             {roomData.timer}
             {t("game.timerUnit")}
           </span>
-        </div>
+        </div> */}
       </div>
 
       {/* Game Area */}
