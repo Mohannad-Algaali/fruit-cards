@@ -91,6 +91,10 @@ export default function Menu({ next }: { next: () => void }) {
           <p className="text-gray-600 text-base sm:text-lg">
             {t("menu.subtitle")}
           </p>
+
+          <p className="text-4xl text-blue-500 font-bold ">
+            #{roomData.roomId}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">

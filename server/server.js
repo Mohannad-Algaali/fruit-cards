@@ -57,7 +57,8 @@ function shuffle(arr) {
 }
 
 const createRoomCode = (length) => {
-  const characters = "1234567890abcdefghijklmnopqrstuvwxyz";
+  // const characters = "1234567890abcdefghijklmnopqrstuvwxyz";
+  const characters = "1234567890";
   let code = "";
   for (let i = 0; i < length; i++) {
     code += characters[Math.floor(Math.random() * characters.length)];
