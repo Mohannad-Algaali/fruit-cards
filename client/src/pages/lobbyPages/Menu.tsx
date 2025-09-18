@@ -12,6 +12,7 @@ export default function Menu({ next }: { next: () => void }) {
 
   const [localTimer, setLocalTimer] = useState(roomData.timer);
   const [localCards, setLocalCards] = useState(roomData.cards);
+  const [message, setMessage] = useState("");
 
   const [userId, setUserId] = useState("");
 
@@ -36,6 +37,13 @@ export default function Menu({ next }: { next: () => void }) {
       clearTimeout(handler);
     };
   }, [localTimer, localCards, roomData]);
+
+  useEffect(() => {
+    const messageTimeout = setTimeout(() => {
+      setMessage("");
+    }, 2000);
+    return () => clearTimeout(messageTimeout);
+  }, [message]);
 
   useEffect(() => {
     setUserId(localStorage.getItem("userId") || socket.id);
@@ -97,7 +105,27 @@ export default function Menu({ next }: { next: () => void }) {
           <p className="text-gray-600 text-base sm:text-lg">
             {t("menu.subtitle")}
           </p>
+
+          <p
+            className="text-4xl font-bold text-primary "
+            onClick={() => {
+              navigator.clipboard.writeText(
+                `https://fruit-cards.vercel.app/lobby/${roomData.roomId}`
+              );
+              setMessage("invite link was copied to clipboard");
+            }}
+          >
+            #{roomData.roomId}
+          </p>
         </div>
+
+        {message !== "" && (
+          <div className="toast z-1">
+            <div className="alert alert-info">
+              <span>{message}</span>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-4 sm:p-6">
